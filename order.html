@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Order - Delicious Bites</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins', sans-serif; }
+body { background:#fefcf9; color:#333; padding:20px; }
+
+h1 { text-align:center; color:#ff6347; margin-bottom:30px; }
+
+/* Floating cards */
+.floating-container {
+  display:flex;
+  flex-wrap:wrap;
+  gap:20px;
+  justify-content:center;
+  margin-bottom:30px;
+}
+
+.floating-card {
+  position:relative;
+  background:#fff;
+  padding:15px 20px;
+  border-radius:15px;
+  box-shadow:0 10px 20px rgba(0,0,0,0.1);
+  min-width:200px;
+  text-align:center;
+}
+
+.floating-card img {
+  width:100%;
+  height:120px;
+  object-fit:cover;
+  border-radius:10px;
+  margin-bottom:10px;
+}
+
+.floating-card h3 {
+  color:#ff6347;
+  font-size:18px;
+  margin-bottom:5px;
+}
+
+.floating-card .price {
+  font-weight:bold;
+  margin-bottom:10px;
+}
+
+.close-btn {
+  position:absolute;
+  top:5px;
+  right:10px;
+  cursor:pointer;
+  font-weight:bold;
+  color:red;
+  font-size:18px;
+}
+
+/* Form */
+form {
+  max-width:500px;
+  margin:0 auto;
+  display:flex;
+  flex-direction:column;
+  gap:15px;
+}
+
+input, textarea {
+  padding:10px;
+  border-radius:10px;
+  border:1px solid #ccc;
+  font-size:16px;
+  width:100%;
+}
+
+input[readonly] {
+  background:#ffeaea;
+  cursor:not-allowed;
+}
+
+/* Submit button */
+button {
+  background:#ff6347;
+  color:#fff;
+  border:none;
+  padding:12px;
+  border-radius:10px;
+  cursor:pointer;
+  font-size:16px;
+  transition:0.3s;
+}
+
+button:hover { background:#e55336; }
+
+@media(max-width:480px){
+  .floating-card { min-width:140px; }
+  .floating-card img { height:100px; }
+}
+</style>
+</head>
+<body>
+
+<h1>Your Order</h1>
+
+<div class="floating-container" id="floatingContainer">
+  <!-- Floating cards will be inserted here dynamically -->
+</div>
+
+<form>
+  <label>Selected Items:</label>
+  <input type="text" id="selectedItems" placeholder="Your selected items" readonly>
+
+  <label>Your Name:</label>
+  <input type="text" id="customerName" placeholder="Enter your name">
+
+  <button type="submit">Place Order</button>
+</form>
+
+<script>
+// Sample selected items from menu.html
+// In real scenario, this could come from localStorage or query params
+const selectedFood = [
+  {name:'Margherita Pizza', price:'$12.99', img:'https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=800&q=80'},
+  {name:'Cheeseburger', price:'$10.99', img:'https://images.unsplash.com/photo-1604908177520-6f2f6807f1ed?auto=format&fit=crop&w=800&q=80'},
+  {name:'Caesar Salad', price:'$9.99', img:'https://images.unsplash.com/photo-1600891964189-bd82c0f11b7e?auto=format&fit=crop&w=800&q=80'}
+];
+
+const floatingContainer = document.getElementById('floatingContainer');
+const selectedInput = document.getElementById('selectedItems');
+
+function updateSelectedInput() {
+  selectedInput.value = selectedFood.map(item => item.name).join(', ');
+}
+
+function createFloatingCards() {
+  floatingContainer.innerHTML = '';
+  selectedFood.forEach((item, index) => {
+    const card = document.createElement('div');
+    card.classList.add('floating-card');
+
+    card.innerHTML = `
+      <span class="close-btn" data-index="${index}">&times;</span>
+      <img src="${item.img}" alt="${item.name}">
+      <h3>${item.name}</h3>
+      <div class="price">${item.price}</div>
+    `;
+    floatingContainer.appendChild(card);
+  });
+
+  // Add close button functionality
+  document.querySelectorAll('.close-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const i = btn.getAttribute('data-index');
+      selectedFood.splice(i,1);
+      createFloatingCards();
+      updateSelectedInput();
+    });
+  });
+
+  updateSelectedInput();
+}
+
+// Initialize
+createFloatingCards();
+</script>
+
+</body>
+</html>

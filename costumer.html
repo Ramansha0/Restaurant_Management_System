@@ -17,10 +17,31 @@ body { background:#fefcf9; color:#333; }
 /* Header */
 header {
   position:fixed; top:0; width:100%; background:#fff; padding:15px 30px;
-  display:flex; justify-content:center; align-items:center;
+  display:flex; justify-content:space-between; align-items:center;
   box-shadow:0 5px 20px rgba(0,0,0,0.1); z-index:1000;
 }
 header h1 { font-size:28px; color:#ff6347; }
+.order-icon {
+  position:relative;
+  font-size:28px;
+  color:#ff6347;
+  text-decoration:none;
+}
+#cart-count {
+  position:absolute;
+  top:-8px;
+  right:-10px;
+  background:red;
+  color:#fff;
+  font-size:14px;
+  font-weight:bold;
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
 
 /* Section */
 .menu-section { margin-top:90px; padding:50px 20px; }
@@ -67,10 +88,10 @@ footer { text-align:center; padding:40px 20px; background:#fff; box-shadow:0 -5p
 @media(max-width:768px){ .food-item { flex:0 0 160px; } header { padding:10px 20px; } }
 @media(max-width:480px){ 
   .food-item { flex:0 0 140px; }
-  .food-item img { height:120px; } /* shorter image in mobile */
+  .food-item img { height:120px; } 
   .food-content { padding:10px; }
   .menu-section h2 { font-size:24px; }
-  .hero-bg { height:180px; } /* shorter hero on mobile */
+  .hero-bg { height:180px; } 
 }
 </style>
 </head>
@@ -78,6 +99,9 @@ footer { text-align:center; padding:40px 20px; background:#fff; box-shadow:0 -5p
 
 <header>
   <h1>Delicious Bites</h1>
+  <a href="order.html" class="order-icon">
+    🛒<span id="cart-count">0</span>
+  </a>
 </header>
 
 <div class="hero-bg" id="heroBg"></div>
@@ -104,96 +128,96 @@ footer { text-align:center; padding:40px 20px; background:#fff; box-shadow:0 -5p
       </div>
     </div>
   </div>
-<!-- Updated Popular Menu Row -->
-<h2>Popular Menu</h2>
-<div class="row-container">
-  <button class="scroll-btn scroll-left">&#8592;</button>
-  <div class="menu-row" id="row1">
-    <div class="food-item">
-      <img src="https://images.unsplash.com/photo-1600891964189-bd82c0f11b7e?auto=format&fit=crop&w=800&q=80" alt="Salad">
-      <div class="food-content">
-        <h3>Caesar Salad</h3>
-        <p>Romaine, parmesan, croutons, Caesar dressing.</p>
-        <div class="price">$9.99</div>
-        <label><input type="checkbox"> Add</label>
+
+  <h2>Popular Menu</h2>
+  <div class="row-container">
+    <button class="scroll-btn scroll-left">&#8592;</button>
+    <div class="menu-row" id="row1">
+      <!-- Multiple food items -->
+      <div class="food-item">
+        <img src="https://images.unsplash.com/photo-1600891964189-bd82c0f11b7e?auto=format&fit=crop&w=800&q=80" alt="Salad">
+        <div class="food-content">
+          <h3>Caesar Salad</h3>
+          <p>Romaine, parmesan, croutons, Caesar dressing.</p>
+          <div class="price">$9.99</div>
+          <label><input type="checkbox"> Add</label>
+        </div>
+      </div>
+      <div class="food-item">
+        <img src="https://images.unsplash.com/photo-1600891964404-81f1f80a3a1b?auto=format&fit=crop&w=800&q=80" alt="Chocolate Cake">
+        <div class="food-content">
+          <h3>Chocolate Cake</h3>
+          <p>Rich, moist chocolate cake with ganache.</p>
+          <div class="price">$6.99</div>
+          <label><input type="checkbox"> Add</label>
+        </div>
+      </div>
+      <div class="food-item">
+        <img src="https://images.unsplash.com/photo-1600891964372-5c0a2a5c6c5d?auto=format&fit=crop&w=800&q=80" alt="Ice Cream">
+        <div class="food-content">
+          <h3>Ice Cream Sundae</h3>
+          <p>Vanilla ice cream with chocolate drizzle.</p>
+          <div class="price">$5.50</div>
+          <label><input type="checkbox"> Add</label>
+        </div>
+      </div>
+      <div class="food-item">
+        <img src="https://images.unsplash.com/photo-1600628423450-c90ee4934f3d?auto=format&fit=crop&w=800&q=80" alt="French Fries">
+        <div class="food-content">
+          <h3>French Fries</h3>
+          <p>Crispy golden fries with ketchup.</p>
+          <div class="price">$3.50</div>
+          <label><input type="checkbox"> Add</label>
+        </div>
+      </div>
+      <div class="food-item">
+        <img src="https://images.unsplash.com/photo-1598514983521-5bfc9bc6e4d1?auto=format&fit=crop&w=800&q=80" alt="Tacos">
+        <div class="food-content">
+          <h3>Chicken Tacos</h3>
+          <p>Soft tortillas with seasoned chicken, salsa, cheese.</p>
+          <div class="price">$8.99</div>
+          <label><input type="checkbox"> Add</label>
+        </div>
+      </div>
+      <div class="food-item">
+        <img src="https://images.unsplash.com/photo-1586190848861-99aa4a171e90?auto=format&fit=crop&w=800&q=80" alt="Sushi">
+        <div class="food-content">
+          <h3>Sushi Platter</h3>
+          <p>Assorted fresh sushi with wasabi and soy sauce.</p>
+          <div class="price">$19.99</div>
+          <label><input type="checkbox"> Add</label>
+        </div>
+      </div>
+      <div class="food-item">
+        <img src="https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=800&q=80" alt="Steak">
+        <div class="food-content">
+          <h3>Grilled Steak</h3>
+          <p>Juicy grilled steak with herbs and butter.</p>
+          <div class="price">$22.99</div>
+          <label><input type="checkbox"> Add</label>
+        </div>
+      </div>
+      <div class="food-item">
+        <img src="https://images.unsplash.com/photo-1601050693131-529f08e1aa33?auto=format&fit=crop&w=800&q=80" alt="Pizza">
+        <div class="food-content">
+          <h3>Pepperoni Pizza</h3>
+          <p>Classic pizza with pepperoni and cheese.</p>
+          <div class="price">$13.99</div>
+          <label><input type="checkbox"> Add</label>
+        </div>
+      </div>
+      <div class="food-item">
+        <img src="https://images.unsplash.com/photo-1604152135912-04a5b66f2cfa?auto=format&fit=crop&w=800&q=80" alt="Pasta">
+        <div class="food-content">
+          <h3>Alfredo Pasta</h3>
+          <p>Creamy fettuccine with chicken and parmesan.</p>
+          <div class="price">$14.99</div>
+          <label><input type="checkbox"> Add</label>
+        </div>
       </div>
     </div>
-    <div class="food-item">
-      <img src="https://images.unsplash.com/photo-1600891964404-81f1f80a3a1b?auto=format&fit=crop&w=800&q=80" alt="Chocolate Cake">
-      <div class="food-content">
-        <h3>Chocolate Cake</h3>
-        <p>Rich, moist chocolate cake with ganache.</p>
-        <div class="price">$6.99</div>
-        <label><input type="checkbox"> Add</label>
-      </div>
-    </div>
-    <div class="food-item">
-      <img src="https://images.unsplash.com/photo-1600891964372-5c0a2a5c6c5d?auto=format&fit=crop&w=800&q=80" alt="Ice Cream">
-      <div class="food-content">
-        <h3>Ice Cream Sundae</h3>
-        <p>Vanilla ice cream with chocolate drizzle.</p>
-        <div class="price">$5.50</div>
-        <label><input type="checkbox"> Add</label>
-      </div>
-    </div>
-    <div class="food-item">
-      <img src="https://images.unsplash.com/photo-1600628423450-c90ee4934f3d?auto=format&fit=crop&w=800&q=80" alt="French Fries">
-      <div class="food-content">
-        <h3>French Fries</h3>
-        <p>Crispy golden fries with ketchup.</p>
-        <div class="price">$3.50</div>
-        <label><input type="checkbox"> Add</label>
-      </div>
-    </div>
-    <div class="food-item">
-      <img src="https://images.unsplash.com/photo-1598514983521-5bfc9bc6e4d1?auto=format&fit=crop&w=800&q=80" alt="Tacos">
-      <div class="food-content">
-        <h3>Chicken Tacos</h3>
-        <p>Soft tortillas with seasoned chicken, salsa, cheese.</p>
-        <div class="price">$8.99</div>
-        <label><input type="checkbox"> Add</label>
-      </div>
-    </div>
-    <!-- Additional items -->
-    <div class="food-item">
-      <img src="https://images.unsplash.com/photo-1586190848861-99aa4a171e90?auto=format&fit=crop&w=800&q=80" alt="Sushi">
-      <div class="food-content">
-        <h3>Sushi Platter</h3>
-        <p>Assorted fresh sushi with wasabi and soy sauce.</p>
-        <div class="price">$19.99</div>
-        <label><input type="checkbox"> Add</label>
-      </div>
-    </div>
-    <div class="food-item">
-      <img src="https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=800&q=80" alt="Steak">
-      <div class="food-content">
-        <h3>Grilled Steak</h3>
-        <p>Juicy grilled steak with herbs and butter.</p>
-        <div class="price">$22.99</div>
-        <label><input type="checkbox"> Add</label>
-      </div>
-    </div>
-    <div class="food-item">
-      <img src="https://images.unsplash.com/photo-1601050693131-529f08e1aa33?auto=format&fit=crop&w=800&q=80" alt="Pizza">
-      <div class="food-content">
-        <h3>Pepperoni Pizza</h3>
-        <p>Classic pizza with pepperoni and cheese.</p>
-        <div class="price">$13.99</div>
-        <label><input type="checkbox"> Add</label>
-      </div>
-    </div>
-    <div class="food-item">
-      <img src="https://images.unsplash.com/photo-1604152135912-04a5b66f2cfa?auto=format&fit=crop&w=800&q=80" alt="Pasta">
-      <div class="food-content">
-        <h3>Alfredo Pasta</h3>
-        <p>Creamy fettuccine with chicken and parmesan.</p>
-        <div class="price">$14.99</div>
-        <label><input type="checkbox"> Add</label>
-      </div>
-    </div>
+    <button class="scroll-btn scroll-right">&#8594;</button>
   </div>
-  <button class="scroll-btn scroll-right">&#8594;</button>
-</div>
 
   <h2>More Items</h2>
   <div class="static-row">
@@ -216,7 +240,6 @@ footer { text-align:center; padding:40px 20px; background:#fff; box-shadow:0 -5p
       </div>
     </div>
   </div>
-
 </section>
 
 <footer>
@@ -226,22 +249,34 @@ footer { text-align:center; padding:40px 20px; background:#fff; box-shadow:0 -5p
 <script>
 // Horizontal scroll functionality
 document.querySelectorAll('.row-container').forEach(container => {
-  const row = container.querySelector('.menu-row');       // The scrollable row
+  const row = container.querySelector('.menu-row');       
   const leftBtn = container.querySelector('.scroll-left'); 
   const rightBtn = container.querySelector('.scroll-right');
 
   leftBtn.addEventListener('click', () => {
-    row.scrollBy({ left: -250, behavior: 'smooth' });     // Scroll left
+    row.scrollBy({ left: -250, behavior: 'smooth' });     
   });
 
   rightBtn.addEventListener('click', () => {
-    row.scrollBy({ left: 250, behavior: 'smooth' });      // Scroll right
+    row.scrollBy({ left: 250, behavior: 'smooth' });      
   });
 });
+
 // Hero disappear on scroll
 const hero = document.getElementById('heroBg');
 window.addEventListener('scroll', () => {
   hero.style.opacity = 1 - window.scrollY/200;
+});
+
+// Cart counter
+const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+const cartCount = document.getElementById('cart-count');
+
+checkboxes.forEach(box => {
+  box.addEventListener('change', () => {
+    const checkedCount = document.querySelectorAll('input[type="checkbox"]:checked').length;
+    cartCount.textContent = checkedCount;
+  });
 });
 </script>
 
