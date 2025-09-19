@@ -93,13 +93,55 @@ footer { text-align:center; padding:40px 20px; background:#fff; box-shadow:0 -5p
   .menu-section h2 { font-size:24px; }
   .hero-bg { height:180px; } 
 }
+
+h1 { text-align:center; color:#ff6347; margin-bottom:30px; }
+
+form {
+  max-width:500px;
+  margin:0 auto;
+  display:flex;
+  flex-direction:column;
+  gap:15px;
+}
+
+input, textarea {
+  padding:10px;
+  border-radius:10px;
+  border:1px solid #ccc;
+  font-size:16px;
+  width:100%;
+}
+
+input[readonly] {
+  background:#ffeaea;
+  cursor:not-allowed;
+}
+
+/* Submit button */
+button {
+  background:#ff6347;
+  color:#fff;
+  border:none;
+  padding:12px;
+  border-radius:10px;
+  cursor:pointer;
+  font-size:16px;
+  transition:0.3s;
+}
+
+button:hover { background:#e55336; }
+
+@media(max-width:480px){
+  .floating-card { min-width:140px; }
+  .floating-card img { height:100px; }
+}
 </style>
 </head>
 <body>
 
 <header>
   <h1>Delicious Bites</h1>
-  <a href="order.html" class="order-icon">
+  <a  class="order-icon">
     🛒<span id="cart-count">0</span>
   </a>
 </header>
@@ -115,7 +157,7 @@ footer { text-align:center; padding:40px 20px; background:#fff; box-shadow:0 -5p
         <h3>Margherita Pizza</h3>
         <p>Classic pizza with mozzarella, tomato, basil.</p>
         <div class="price">$12.99</div>
-        <label><input type="checkbox"> Add</label>
+        <label><input type="checkbox" data-name=" Margherita Pizza"> Add</label>
       </div>
     </div>
     <div class="food-item">
@@ -124,7 +166,7 @@ footer { text-align:center; padding:40px 20px; background:#fff; box-shadow:0 -5p
         <h3>Cheeseburger</h3>
         <p>Juicy beef patty, cheddar, lettuce, tomato, sauce.</p>
         <div class="price">$10.99</div>
-        <label><input type="checkbox"> Add</label>
+        <label><input type="checkbox" data-name=" Cheese Burger"> Add</label>
       </div>
     </div>
   </div>
@@ -140,7 +182,7 @@ footer { text-align:center; padding:40px 20px; background:#fff; box-shadow:0 -5p
           <h3>Caesar Salad</h3>
           <p>Romaine, parmesan, croutons, Caesar dressing.</p>
           <div class="price">$9.99</div>
-          <label><input type="checkbox"> Add</label>
+          <label><input type="checkbox" data-name=" Caesar Salad"> Add</label>
         </div>
       </div>
       <div class="food-item">
@@ -149,7 +191,7 @@ footer { text-align:center; padding:40px 20px; background:#fff; box-shadow:0 -5p
           <h3>Chocolate Cake</h3>
           <p>Rich, moist chocolate cake with ganache.</p>
           <div class="price">$6.99</div>
-          <label><input type="checkbox"> Add</label>
+          <label><input type="checkbox" data-name=" Chocolate Cake"> Add</label>
         </div>
       </div>
       <div class="food-item">
@@ -158,7 +200,7 @@ footer { text-align:center; padding:40px 20px; background:#fff; box-shadow:0 -5p
           <h3>Ice Cream Sundae</h3>
           <p>Vanilla ice cream with chocolate drizzle.</p>
           <div class="price">$5.50</div>
-          <label><input type="checkbox"> Add</label>
+          <label><input type="checkbox" data-name="Ice Cream Sundae"> Add</label>
         </div>
       </div>
       <div class="food-item">
@@ -167,7 +209,7 @@ footer { text-align:center; padding:40px 20px; background:#fff; box-shadow:0 -5p
           <h3>French Fries</h3>
           <p>Crispy golden fries with ketchup.</p>
           <div class="price">$3.50</div>
-          <label><input type="checkbox"> Add</label>
+          <label><input type="checkbox" data-name=" French Fries"> Add</label>
         </div>
       </div>
       <div class="food-item">
@@ -176,7 +218,7 @@ footer { text-align:center; padding:40px 20px; background:#fff; box-shadow:0 -5p
           <h3>Chicken Tacos</h3>
           <p>Soft tortillas with seasoned chicken, salsa, cheese.</p>
           <div class="price">$8.99</div>
-          <label><input type="checkbox"> Add</label>
+          <label><input type="checkbox" data-name=" Chicken Tacos"> Add</label>
         </div>
       </div>
       <div class="food-item">
@@ -185,7 +227,7 @@ footer { text-align:center; padding:40px 20px; background:#fff; box-shadow:0 -5p
           <h3>Sushi Platter</h3>
           <p>Assorted fresh sushi with wasabi and soy sauce.</p>
           <div class="price">$19.99</div>
-          <label><input type="checkbox"> Add</label>
+          <label><input type="checkbox" data-name="dal-bhat"> Add</label>
         </div>
       </div>
       <div class="food-item">
@@ -194,7 +236,7 @@ footer { text-align:center; padding:40px 20px; background:#fff; box-shadow:0 -5p
           <h3>Grilled Steak</h3>
           <p>Juicy grilled steak with herbs and butter.</p>
           <div class="price">$22.99</div>
-          <label><input type="checkbox"> Add</label>
+          <label><input type="checkbox" data-name="Grilled-steak"> Add</label>
         </div>
       </div>
       <div class="food-item">
@@ -203,7 +245,7 @@ footer { text-align:center; padding:40px 20px; background:#fff; box-shadow:0 -5p
           <h3>Pepperoni Pizza</h3>
           <p>Classic pizza with pepperoni and cheese.</p>
           <div class="price">$13.99</div>
-          <label><input type="checkbox"> Add</label>
+          <label><input type="checkbox" data-name=" Peperoni Pizza"> Add</label>
         </div>
       </div>
       <div class="food-item">
@@ -212,7 +254,7 @@ footer { text-align:center; padding:40px 20px; background:#fff; box-shadow:0 -5p
           <h3>Alfredo Pasta</h3>
           <p>Creamy fettuccine with chicken and parmesan.</p>
           <div class="price">$14.99</div>
-          <label><input type="checkbox"> Add</label>
+          <label><input type="checkbox" data-name="Alfredo Pasta"> Add</label>
         </div>
       </div>
     </div>
@@ -227,7 +269,7 @@ footer { text-align:center; padding:40px 20px; background:#fff; box-shadow:0 -5p
         <h3>Sushi Platter</h3>
         <p>Assorted fresh sushi with wasabi and soy sauce.</p>
         <div class="price">$19.99</div>
-        <label><input type="checkbox"> Add</label>
+        <label><input type="checkbox" data-name="Sushi Platter"> Add</label>
       </div>
     </div>
     <div class="food-item">
@@ -236,11 +278,26 @@ footer { text-align:center; padding:40px 20px; background:#fff; box-shadow:0 -5p
         <h3>Grilled Steak</h3>
         <p>Juicy grilled steak with herbs and butter.</p>
         <div class="price">$22.99</div>
-        <label><input type="checkbox"> Add</label>
+        <label><input type="checkbox" data-name="Grilled Steak"> Add</label>
       </div>
     </div>
   </div>
 </section>
+<div class="order-section">
+<h1>Your Order</h1>
+
+
+
+<form>
+  <label>Selected Items:</label>
+  <input type="text" id="selectedItems" placeholder="Your selected items" readonly>
+
+  <label>Your Name:</label>
+  <input type="text" id="customerName" placeholder="Enter your name">
+
+  <button type="submit">Place Order</button>
+</form>
+</div>
 
 <footer>
   &copy; 2025 Delicious Bites. All Rights Reserved.
@@ -278,6 +335,26 @@ checkboxes.forEach(box => {
     cartCount.textContent = checkedCount;
   });
 });
+let selectedItems =document.getElementById('selectedItems');
+function update(){
+  const selectedNames=[];
+checkboxes.forEach(box =>{
+if(box.checked){
+  selectedNames.push(box.dataset.name);
+}
+})
+selectedItems.value=selectedNames.join(', ');
+
+}
+checkboxes.forEach(box =>{
+  box.addEventListener('change',update);
+})
+let order = document.querySelector('.order-icon');
+let orderview = document.querySelector('.order-section');
+order.addEventListener('click',()=>{
+  orderview.scrollIntoView({behavior:"smooth"});
+})
+
 </script>
 
 </body>
