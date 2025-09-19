@@ -27,6 +27,25 @@ header h1 { font-size:28px; color:#ff6347; }
   color:#ff6347;
   text-decoration:none;
 }
+.indicator{
+  font-size:47px;
+  font-weight: 700;
+  color:#ff6347;
+  position: fixed;
+  z-index: 10000;
+  margin-top:200px;
+  margin-left: 960px;
+  margin-right:-1000px;
+  animation: bounce 1s infinite alternate; ;
+}
+@keyframes bounce{
+  0%{
+    margin-top:90px;
+  }
+  100%{
+    margin-top:130px
+  }
+}
 #cart-count {
   position:absolute;
   top:-8px;
@@ -91,7 +110,13 @@ footer { text-align:center; padding:40px 20px; background:#fff; box-shadow:0 -5p
     margin-left:-100px !important;
   }
 @media(max-width:1024px){ .food-item { flex:0 0 200px; } }
-@media(max-width:768px){  .add{
+@media(max-width:768px){
+    .indicator{
+    margin-left:420px !important;
+    font-size:30px;
+    
+
+  }  .add{
     margin-right:-50px !important;
     margin-left:-50px !important;
   } .food-item { flex:0 0 160px; } header { padding:10px 20px; } }
@@ -104,6 +129,16 @@ footer { text-align:center; padding:40px 20px; background:#fff; box-shadow:0 -5p
   .add{
     margin-right:-50px !important;
     margin-left:-50px !important;
+  }
+  .indicator{
+    margin-left:250px !important;
+    font-size:27px;
+    color:rgb(42, 221, 234);
+
+  }
+  .order-section{
+    margin-left:20px;
+    margin-right:20px
   }
 }
 
@@ -157,8 +192,9 @@ button:hover { background:#e55336; }
   <a  class="order-icon">
     🛒<span id="cart-count">0</span>
   </a>
+  
 </header>
-
+<h1 class="indicator">Click Here! ⬆</h1>
 <div class="hero-bg" id="heroBg"></div>
 
 <section class="menu-section">
