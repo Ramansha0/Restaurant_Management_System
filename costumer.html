@@ -33,6 +33,7 @@ header h1 { font-size:28px; color:#ff6347; }
   color:#ff6347;
   position: fixed;
   z-index: 10000;
+  display:none;
   margin-top:200px;
   margin-left: 960px;
   margin-right:-1000px;
@@ -383,12 +384,14 @@ checkboxes.forEach(box => {
   box.addEventListener('change', () => {
     const checkedCount = document.querySelectorAll('input[type="checkbox"]:checked').length;
     cartCount.textContent = checkedCount;
+  
   });
 });
 let selectedItems =document.getElementById('selectedItems');
 function update(){
   const selectedNames=[];
 checkboxes.forEach(box =>{
+  
 if(box.checked){
   selectedNames.push(box.dataset.name);
 }
@@ -396,13 +399,22 @@ if(box.checked){
 selectedItems.value=selectedNames.join(', ');
 
 }
+let indicator = document.querySelector('.indicator');
 checkboxes.forEach(box =>{
-  box.addEventListener('change',update);
+  box.addEventListener('change',()=>{
+    update();
+    if(box.checked){
+indicator.style.display = 'block';
+}
+  });
+  
+
 })
 let order = document.querySelector('.order-icon');
 let orderview = document.querySelector('.order-section');
 order.addEventListener('click',()=>{
   orderview.scrollIntoView({behavior:"smooth"});
+  indicator.style.display = 'none';
 })
 
 </script>
