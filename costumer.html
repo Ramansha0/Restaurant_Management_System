@@ -338,12 +338,12 @@ button:hover { background:#e55336; }
 
 
 
-<form>
+<form method="POST" action="costumer.php">
   <label>Selected Items      :</label>
-  <input type="text" id="selectedItems" placeholder="Your selected items" readonly>
+  <input name="selected" type="text" id="selectedItems" placeholder="Your selected items" readonly>
 
   <label>Table Number :</label>
-  <input type="text" id="customerName" placeholder="Enter your table number">
+  <input name="table" type="text" id="customerName" placeholder="Enter your table number">
 
 
   <button id="submit" type="submit">Place Order</button>
