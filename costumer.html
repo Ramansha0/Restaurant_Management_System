@@ -82,16 +82,29 @@ header h1 { font-size:28px; color:#ff6347; }
 
 /* Footer */
 footer { text-align:center; padding:40px 20px; background:#fff; box-shadow:0 -5px 20px rgba(0,0,0,0.05); margin-top:50px; }
-
+.add{
+  margin-right:-100px
+}
 /* Responsive */
+  .add{
+    margin-right:-100px !important;
+    margin-left:-100px !important;
+  }
 @media(max-width:1024px){ .food-item { flex:0 0 200px; } }
-@media(max-width:768px){ .food-item { flex:0 0 160px; } header { padding:10px 20px; } }
+@media(max-width:768px){  .add{
+    margin-right:-50px !important;
+    margin-left:-50px !important;
+  } .food-item { flex:0 0 160px; } header { padding:10px 20px; } }
 @media(max-width:480px){ 
   .food-item { flex:0 0 140px; }
   .food-item img { height:120px; } 
   .food-content { padding:10px; }
   .menu-section h2 { font-size:24px; }
   .hero-bg { height:180px; } 
+  .add{
+    margin-right:-50px !important;
+    margin-left:-50px !important;
+  }
 }
 
 h1 { text-align:center; color:#ff6347; margin-bottom:30px; }
@@ -157,16 +170,16 @@ button:hover { background:#e55336; }
         <h3>Margherita Pizza</h3>
         <p>Classic pizza with mozzarella, tomato, basil.</p>
         <div class="price">$12.99</div>
-        <label><input type="checkbox" data-name=" Margherita Pizza"> Add</label>
+        <label><input class="add" type="checkbox" data-name=" Margherita Pizza"> Add</label>
       </div>
     </div>
     <div class="food-item">
       <img src="https://images.unsplash.com/photo-1604908177520-6f2f6807f1ed?auto=format&fit=crop&w=800&q=80" alt="Burger">
       <div class="food-content">
         <h3>Cheeseburger</h3>
-        <p>Juicy beef patty, cheddar, lettuce, tomato, sauce.</p>
+        <p>Juicy beef patty, cheddar, lettuce, tomato with mozzarella, sauce.</p>
         <div class="price">$10.99</div>
-        <label><input type="checkbox" data-name=" Cheese Burger"> Add</label>
+        <label><input class="add"  type="checkbox" data-name=" Cheese Burger"> Add</label>
       </div>
     </div>
   </div>
@@ -182,7 +195,7 @@ button:hover { background:#e55336; }
           <h3>Caesar Salad</h3>
           <p>Romaine, parmesan, croutons, Caesar dressing.</p>
           <div class="price">$9.99</div>
-          <label><input type="checkbox" data-name=" Caesar Salad"> Add</label>
+          <label><input class="add" type="checkbox" data-name=" Caesar Salad"> Add</label>
         </div>
       </div>
       <div class="food-item">
@@ -191,7 +204,7 @@ button:hover { background:#e55336; }
           <h3>Chocolate Cake</h3>
           <p>Rich, moist chocolate cake with ganache.</p>
           <div class="price">$6.99</div>
-          <label><input type="checkbox" data-name=" Chocolate Cake"> Add</label>
+          <label><input class="add" type="checkbox" data-name=" Chocolate Cake"> Add</label>
         </div>
       </div>
       <div class="food-item">
@@ -200,16 +213,16 @@ button:hover { background:#e55336; }
           <h3>Ice Cream Sundae</h3>
           <p>Vanilla ice cream with chocolate drizzle.</p>
           <div class="price">$5.50</div>
-          <label><input type="checkbox" data-name="Ice Cream Sundae"> Add</label>
+          <label><input class="add" type="checkbox" data-name="Ice Cream Sundae"> Add</label>
         </div>
       </div>
       <div class="food-item">
         <img src="https://images.unsplash.com/photo-1600628423450-c90ee4934f3d?auto=format&fit=crop&w=800&q=80" alt="French Fries">
         <div class="food-content">
           <h3>French Fries</h3>
-          <p>Crispy golden fries with ketchup.</p>
+          <p>Crispy golden fries with ketchup,tomato with mozzarella,.</p>
           <div class="price">$3.50</div>
-          <label><input type="checkbox" data-name=" French Fries"> Add</label>
+          <label><input class="add" type="checkbox" data-name=" French Fries"> Add</label>
         </div>
       </div>
       <div class="food-item">
@@ -218,25 +231,25 @@ button:hover { background:#e55336; }
           <h3>Chicken Tacos</h3>
           <p>Soft tortillas with seasoned chicken, salsa, cheese.</p>
           <div class="price">$8.99</div>
-          <label><input type="checkbox" data-name=" Chicken Tacos"> Add</label>
+          <label><input class="add" type="checkbox" data-name=" Chicken Tacos"> Add</label>
         </div>
       </div>
       <div class="food-item">
         <img src="https://images.unsplash.com/photo-1586190848861-99aa4a171e90?auto=format&fit=crop&w=800&q=80" alt="Sushi">
         <div class="food-content">
           <h3>Sushi Platter</h3>
-          <p>Assorted fresh sushi with wasabi and soy sauce.</p>
+          <p>Assorted fresh sushi with wasabi and soy sauce, mozzarella.</p>
           <div class="price">$19.99</div>
-          <label><input type="checkbox" data-name="dal-bhat"> Add</label>
+          <label><input class="add" type="checkbox" data-name="dal-bhat"> Add</label>
         </div>
       </div>
       <div class="food-item">
         <img src="https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=800&q=80" alt="Steak">
         <div class="food-content">
           <h3>Grilled Steak</h3>
-          <p>Juicy grilled steak with herbs and butter.</p>
+          <p>Juicy grilled steak with herbs and butter with mozzarella,.</p>
           <div class="price">$22.99</div>
-          <label><input type="checkbox" data-name="Grilled-steak"> Add</label>
+          <label><input class="add" type="checkbox" data-name="Grilled-steak"> Add</label>
         </div>
       </div>
       <div class="food-item">
@@ -245,16 +258,16 @@ button:hover { background:#e55336; }
           <h3>Pepperoni Pizza</h3>
           <p>Classic pizza with pepperoni and cheese.</p>
           <div class="price">$13.99</div>
-          <label><input type="checkbox" data-name=" Peperoni Pizza"> Add</label>
+          <label><input class="add" type="checkbox" data-name=" Peperoni Pizza"> Add</label>
         </div>
       </div>
       <div class="food-item">
         <img src="https://images.unsplash.com/photo-1604152135912-04a5b66f2cfa?auto=format&fit=crop&w=800&q=80" alt="Pasta">
         <div class="food-content">
           <h3>Alfredo Pasta</h3>
-          <p>Creamy fettuccine with chicken and parmesan.</p>
+          <p>Creamy fettuccine with chicken and parmesan with mozzarella,.</p>
           <div class="price">$14.99</div>
-          <label><input type="checkbox" data-name="Alfredo Pasta"> Add</label>
+          <label><input  class="add" type="checkbox" data-name="Alfredo Pasta"> Add</label>
         </div>
       </div>
     </div>
@@ -269,7 +282,7 @@ button:hover { background:#e55336; }
         <h3>Sushi Platter</h3>
         <p>Assorted fresh sushi with wasabi and soy sauce.</p>
         <div class="price">$19.99</div>
-        <label><input type="checkbox" data-name="Sushi Platter"> Add</label>
+        <label ><input class="add" type="checkbox" data-name="Sushi Platter"> Add</label>
       </div>
     </div>
     <div class="food-item">
@@ -278,7 +291,7 @@ button:hover { background:#e55336; }
         <h3>Grilled Steak</h3>
         <p>Juicy grilled steak with herbs and butter.</p>
         <div class="price">$22.99</div>
-        <label><input type="checkbox" data-name="Grilled Steak"> Add</label>
+        <label><input class="add" type="checkbox" data-name="Grilled Steak"> Add</label>
       </div>
     </div>
   </div>
@@ -289,11 +302,12 @@ button:hover { background:#e55336; }
 
 
 <form>
-  <label>Selected Items:</label>
+  <label>Selected Items      :</label>
   <input type="text" id="selectedItems" placeholder="Your selected items" readonly>
 
-  <label>Your Name:</label>
-  <input type="text" id="customerName" placeholder="Enter your name">
+  <label>Table Number :</label>
+  <input type="text" id="customerName" placeholder="Enter your table number">
+
 
   <button type="submit">Place Order</button>
 </form>
