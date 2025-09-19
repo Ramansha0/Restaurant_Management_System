@@ -346,7 +346,7 @@ button:hover { background:#e55336; }
   <input type="text" id="customerName" placeholder="Enter your table number">
 
 
-  <button type="submit">Place Order</button>
+  <button id="submit" type="submit">Place Order</button>
 </form>
 </div>
 
@@ -416,7 +416,13 @@ order.addEventListener('click',()=>{
   orderview.scrollIntoView({behavior:"smooth"});
   indicator.style.display = 'none';
 })
-
+//submit form and clear everything//
+let submit = document.getElementById('submit');
+submit.addEventListener('click',()=>{
+  if(selectedItems.value =='' || document.getElementById('customerName').value ==''){
+    alert('Please select items and enter table number');
+  }});
+  alert('Order placed successfully!');
 </script>
 
 </body>
