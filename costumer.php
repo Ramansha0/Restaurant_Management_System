@@ -20,7 +20,13 @@ if (isset($_POST['selected']) && isset($_POST['table'])) {
 } else {
     $message = "⚠️ No order data received.";
 }
-
+    $save = "INSERT INTO history (`Table`, `Items`) VALUES ('$table', '$selected')";
+    if (mysqli_query($con, $save)) {
+        $message = "✅ Your order has been submitted successfully!";
+    } else {
+        $message = "❌ Error: " . mysqli_error($con);
+    }
+ 
 $con->close();
 ?>
 

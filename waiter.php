@@ -114,7 +114,7 @@ header {
 }
 .btn2{
   background: #23c138ff;
-  width:100%;
+
 }
 .written { width:100%; display:block; margin-bottom: 8px; }
 
@@ -135,10 +135,15 @@ footer {
   .order-items { font-size: 17px; }
   .btn { height: 30px; width: auto; font-size: 16px; margin-bottom: 5px;}
   .sidebar a { font-size: 16px; padding: 10px; }
+}@media (max-width: 480px) {
+.btn2{
+  width:100%
 }
 
+}
 /* -------- Responsive: Mobiles -------- */
 @media (max-width: 600px) {
+
   .container { grid-template-columns: 1fr; }
   .sidebar { 
     position: fixed; 
@@ -170,8 +175,8 @@ footer {
   <aside class="sidebar">
     <h2>Navigation</h2>
     <ul>
-      <li><a href="#">📋 Orders</a></li>
-      <li><a href="#">⚙️ History</a></li>
+      <li><a href="waiter.php">📋 Orders</a></li>
+      <li><a href="history.php">⚙️ History</a></li>
     </ul>
   </aside>
 
@@ -186,8 +191,7 @@ if(isset($_POST["serve"])){
     $id = intval($_POST["ID"]);
     $Del = "DELETE FROM orders WHERE ID = $id";
     $con->query($Del);
-    header("Location: " . $_SERVER['PHP_SELF']);
-    exit();
+  
 }
 
 if(isset($_POST["pending"])){
@@ -237,6 +241,7 @@ hamburger.addEventListener('click', () => {
   open = !open;
   hamburger.innerHTML = open ? '&#10006;' : '&#9776;';
 });
+
 </script>
 
 </body>
