@@ -1,32 +1,33 @@
 <?php
-// Connect to database
-$con = new mysqli("localhost", "root", "", "datasave");
-if ($con->connect_error) {
-    die("Connection failed: " . $con->connect_error);
-}
+// Order submission - saves the order into phpMyAdmin (datasave.orders + history)
+include 'config.php';
 
-// Check POST data
+$con = db_orders();
+
 if (isset($_POST['selected']) && isset($_POST['table'])) {
-    $selected = $_POST['selected'];
-    $table = $_POST['table'];
+    $selected = trim($_POST['selected']);
+    $table = trim($_POST['table']);
 
-    // Insert into database
-    $save = "INSERT INTO orders (`Table`, `Items`) VALUES ('$table', '$selected')";
-    if (mysqli_query($con, $save)) {
-        $message = "✅ Your order has been submitted successfully!";
+    if ($selected !== '' && $table !== '') {
+        // Prepared statements: safe against SQL injection
+        $stmt = $con->prepare("INSERT INTO orders (`Table`, `Items`) VALUES (?, ?)");
+        $stmt->bind_param("ss", $table, $selected);
+        $ok = $stmt->execute();
+
+        // Save a copy into history
+        $stmt2 = $con->prepare("INSERT INTO history (`Table`, `Items`) VALUES (?, ?)");
+        $stmt2->bind_param("ss", $table, $selected);
+        $ok = $ok && $stmt2->execute();
+
+        $message = $ok ? "✅ Your order for Table " . htmlspecialchars($table) . " has been sent to the kitchen!"
+                       : "❌ Error: " . htmlspecialchars($con->error);
     } else {
-        $message = "❌ Error: " . mysqli_error($con);
+        $message = "⚠️ No order data received.";
     }
 } else {
     $message = "⚠️ No order data received.";
 }
-    $save = "INSERT INTO history (`Table`, `Items`) VALUES ('$table', '$selected')";
-    if (mysqli_query($con, $save)) {
-        $message = "✅ Your order has been submitted successfully!";
-    } else {
-        $message = "❌ Error: " . mysqli_error($con);
-    }
- 
+
 $con->close();
 ?>
 
@@ -72,7 +73,7 @@ $con->close();
   <div class="box">
     <h1>Order Status</h1>
     <p><?php echo $message; ?></p>
-    <a href="costumer.html" class="btn">⬅ Back to Menu</a>
+    <a href="costumer.html<?php echo ($table ?? '') !== '' ? '?table=' . urlencode($table) : ''; ?>" class="btn">⬅ Back to Menu</a>
   </div>
 
 </body>

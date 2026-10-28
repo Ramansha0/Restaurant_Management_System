@@ -1,8 +1,13 @@
+<?php
+// Waiter dashboard - open access (no login required)
+include 'config.php';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="refresh" content="5">
 <title>Restaurant Waiter Dashboard</title>
 <style>
 body {
@@ -177,15 +182,15 @@ footer {
     <ul>
       <li><a href="waiter.php">📋 Orders</a></li>
       <li><a href="history.php">⚙️ History</a></li>
+  
     </ul>
   </aside>
 
   <main class="main">
-    <h2 class="section-title">Live Orders</h2>
+    <h2 class="section-title">Live Orders <span style="font-size:14px;color:#999;">(🔄 refreshes every 5s)</span></h2>
     <div class="orders">
 <?php
-$con = new mysqli("localhost", "root", "", "datasave");
-if ($con->connect_error) die("Connection failed: " . $con->connect_error);
+$con = db_orders();
 
 if(isset($_POST["serve"])){
     $id = intval($_POST["ID"]);
@@ -198,8 +203,6 @@ if(isset($_POST["pending"])){
     $id = intval($_POST["ID"]);
     $Update = "UPDATE orders SET status='Pending' WHERE ID = $id";
     $con->query($Update);
-    header("Location: " . $_SERVER['PHP_SELF']);
-    exit();
 }
 
 $sql = "SELECT * FROM orders ORDER BY ID ASC";
@@ -216,7 +219,7 @@ if($result && $result->num_rows > 0){
         echo "<form method='POST' style='display:flex; flex-wrap:wrap;'>";
         echo "<input type='hidden' name='ID' value='" . $row['ID'] . "'>";
         echo "<button name='serve' class='btn'>Serve</button>";
-        echo "<button  class='btn2'>Pending</button>";
+        echo "<button name='pending' class='btn2'>Pending</button>";
         echo "</form>";
         echo "</div>";
     }

@@ -1,3 +1,7 @@
+<?php
+// Order history - open access (no login required)
+include 'config.php';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -177,6 +181,7 @@ footer {
     <ul>
       <li><a href="waiter.php">📋 Orders</a></li>
       <li><a href="history.php">⚙️ History</a></li>
+
     </ul>
   </aside>
 
@@ -187,8 +192,7 @@ footer {
 
 </form>
     <div class="orders"><?php
-$con = new mysqli("localhost", "root", "", "datasave");
-if ($con->connect_error) die("Connection failed: " . $con->connect_error);
+$con = db_orders();
 //delete//
 if(isset($_POST["submits"])){
     $submit=$_POST["submits"];

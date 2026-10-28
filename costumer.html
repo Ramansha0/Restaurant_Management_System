@@ -4,187 +4,221 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Delicious Bites Menu</title>
-<style>
-* { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins', sans-serif; }
-body { background:#fefcf9; color:#333; }
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-/* Hero background */
+<script>
+/* If a photo ever fails to load, swap it for a friendly emoji plate */
+function imgFallback(img, emoji){
+  const d = document.createElement('div');
+  d.className = 'img-fb';
+  d.textContent = emoji;
+  img.replaceWith(d);
+}
+</script>
+
+<style>
+:root{
+  --brand:#ff6347; --brand-dark:#e55336; --ink:#333; --line:#ffe0d6;
+}
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins', sans-serif; }
+html{ scroll-behavior:smooth; }
+body { background:#fefcf9; color:var(--ink); }
+img{ max-width:100%; }
+button{ font-family:inherit; cursor:pointer; }
+
+/* ---------- Header ---------- */
+header {
+  position:fixed; top:0; width:100%; background:#fff; padding:12px 24px;
+  display:flex; justify-content:space-between; align-items:center;
+  box-shadow:0 5px 20px rgba(0,0,0,0.08); z-index:1000;
+}
+header h1 { font-size:22px; color:var(--brand); }
+.header-right { display:flex; align-items:center; gap:14px; }
+.staff-link { font-size:13px; color:var(--brand); text-decoration:none; font-weight:600; border:1.5px solid var(--brand); padding:6px 14px; border-radius:20px; transition:0.3s; }
+.staff-link:hover { background:var(--brand); color:#fff; }
+.order-icon { position:relative; font-size:26px; cursor:pointer; text-decoration:none; }
+#cart-count {
+  position:absolute; top:-8px; right:-12px; background:red; color:#fff;
+  font-size:12px; font-weight:bold; width:20px; height:20px; border-radius:50%;
+  display:flex; justify-content:center; align-items:center;
+}
+
+/* Bouncing "click here" helper */
+.indicator {
+  position:fixed; right:34px; top:150px; z-index:10000; display:none;
+  font-size:32px; font-weight:800; color:var(--brand);
+  text-shadow:0 2px 8px rgba(255,99,71,.3);
+  animation: bounce 1s infinite alternate;
+  pointer-events:none;
+}
+@keyframes bounce { 0%{ transform:translateY(0) } 100%{ transform:translateY(38px) } }
+
+/* ---------- Sticky quick nav + search ---------- */
+.quick-nav {
+  position:sticky; top:51px; z-index:900;
+  display:flex; align-items:center; gap:8px; overflow-x:auto;
+  background:rgba(255,255,255,.95); backdrop-filter:blur(8px);
+  padding:9px 18px; border-bottom:1px solid var(--line);
+  scrollbar-width:none;
+}
+.quick-nav::-webkit-scrollbar{ display:none; }
+.quick-nav a{
+  text-decoration:none; white-space:nowrap; font-size:12.5px; font-weight:700; color:#777;
+  padding:7px 14px; border-radius:999px; background:#f7f3f1; transition:0.25s;
+}
+.quick-nav a:hover, .quick-nav a.active{ background:var(--brand); color:#fff; box-shadow:0 4px 10px rgba(255,99,71,.35); }
+#menuSearch{
+  margin-left:auto; width:190px; padding:8px 14px; border-radius:999px;
+  border:1.5px solid var(--line); font-size:12.5px; outline:none; background:#fff;
+}
+#menuSearch:focus{ border-color:var(--brand); box-shadow:0 0 0 3px rgba(255,99,71,.15); }
+
+/* ---------- Hero ---------- */
 .hero-bg {
-  width:100%; height:300px; background:url('https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
+  width:100%; height:290px;
+  background:url('https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
   position:relative; transition:opacity 0.5s;
 }
-
-/* Header */
-header {
-  position:fixed; top:0; width:100%; background:#fff; padding:15px 30px;
-  display:flex; justify-content:space-between; align-items:center;
-  box-shadow:0 5px 20px rgba(0,0,0,0.1); z-index:1000;
-}
-header h1 { font-size:28px; color:#ff6347; }
-.order-icon {
-  position:relative;
-  font-size:28px;
-  color:#ff6347;
-  text-decoration:none;
-  cursor: pointer;
-}
-.indicator{
-  font-size:47px;
-  font-weight: 700;
-  color:#ff6347;
-  position: fixed;
-  z-index: 10000;
-  display:none;
-  margin-top:200px;
-  margin-left: 960px;
-  margin-right:-1000px;
-  animation: bounce 1s infinite alternate; ;
-}
-@keyframes bounce{
-  0%{
-    margin-top:90px;
-  }
-  100%{
-    margin-top:130px
-  }
-}
-#cart-count {
-  position:absolute;
-  top:-8px;
-  right:-10px;
-  background:red;
-  color:#fff;
-  font-size:14px;
-  font-weight:bold;
-  width:20px;
-  height:20px;
-  border-radius:50%;
-  display:flex;
-  justify-content:center;
-  align-items:center;
+.hero-bg::after{
+  content:'✨ Fresh · Warm · Homemade — 60 dishes on the menu ✨';
+  position:absolute; left:0; right:0; bottom:14px; color:#fff;
+  text-align:center; font-weight:600; font-size:12.5px;
+  text-shadow:0 1px 8px rgba(0,0,0,.6);
 }
 
-/* Section */
-.menu-section { margin-top:90px; padding:50px 20px; }
-.menu-section h2 { font-size:32px; text-align:center; margin-bottom:30px; color:#ff6347; }
+/* ---------- Sections ---------- */
+section { padding:44px 18px 8px; scroll-margin-top:120px; }
+section h2 { font-size:26px; text-align:center; margin-bottom:6px; color:var(--brand); }
+section .sub { display:block; text-align:center; color:#9a8f8a; font-size:12.5px; margin-bottom:22px; }
 
-/* Static food row */
-.static-row { display:flex; flex-wrap:wrap; gap:20px; justify-content:center; margin-bottom:50px; }
+.static-row { display:flex; flex-wrap:wrap; gap:18px; justify-content:center; margin-bottom:26px; }
+.row-container { position:relative; margin-bottom:26px; }
+.menu-row { display:flex; gap:18px; overflow-x:auto; scroll-behavior:smooth; padding:8px 6px 18px; }
+.menu-row::-webkit-scrollbar { height:6px; }
+.menu-row::-webkit-scrollbar-thumb { background:#ffd4c8; border-radius:999px; }
 
-/* Horizontal scroll row */
-.row-container { position:relative; margin-bottom:50px; }
-.menu-row { display:flex; gap:20px; overflow-x:hidden; scroll-behavior:smooth; padding:10px 0; }
-.menu-row::-webkit-scrollbar { display:none; }
-
-/* Scroll buttons */
 .scroll-btn {
-  position:absolute; top:50%; transform:translateY(-50%);
-  background:#ff6347; color:#fff; border:none; border-radius:50%;
-  width:40px; height:40px; cursor:pointer; z-index:10; font-size:24px;
-  display:flex; align-items:center; justify-content:center; opacity:0.9;
-  transition:0.3s;
+  position:absolute; top:90px; transform:translateY(-50%);
+  background:var(--brand); color:#fff; border:none; border-radius:50%;
+  width:40px; height:40px; z-index:10; font-size:22px;
+  display:flex; align-items:center; justify-content:center;
+  opacity:.85; transition:0.3s; box-shadow:0 4px 12px rgba(255,99,71,.4);
 }
-.scroll-btn:hover { opacity:1; }
-.scroll-left { left:-15px; }
-.scroll-right { right:-15px; }
+.scroll-btn:hover{ opacity:1; transform:translateY(-50%) scale(1.08); }
+.scroll-left { left:-8px; }
+.scroll-right { right:-8px; }
 
-/* Food cards */
+/* ---------- Food cards ---------- */
 .food-item {
-  flex:0 0 250px; background:#fff; border-radius:20px; overflow:hidden;
-  box-shadow:0 10px 20px rgba(0,0,0,0.1); transition: transform 0.3s, box-shadow 0.3s;
+  flex:0 0 230px; background:#fff; border-radius:18px; overflow:hidden;
+  box-shadow:0 8px 22px rgba(0,0,0,0.08); transition: transform .25s, box-shadow .25s;
+  display:flex; flex-direction:column;
 }
-.food-item:hover { transform:scale(1.05); box-shadow:0 20px 30px rgba(0,0,0,0.15); }
-.food-item img { width:100%; height:200px; object-fit:cover; display:block; }
-.food-content { padding:15px; }
-.food-content h3 { font-size:18px; margin-bottom:8px; color:#ff6347; }
-.food-content p { font-size:14px; margin-bottom:8px; color:#555; }
-.food-content .price { font-weight:bold; font-size:16px; margin-bottom:8px; color:#333; }
-.food-content input[type="checkbox"] { transform:scale(1.2); margin-right:10px; cursor:pointer; }
+.food-item:hover { transform:translateY(-5px); box-shadow:0 16px 30px rgba(0,0,0,0.13); }
+.food-item img { width:100%; height:170px; object-fit:cover; display:block; }
+.img-fb{
+  width:100%; height:170px; display:grid; place-items:center; font-size:56px;
+  background:linear-gradient(135deg,#ffe8dd,#ffd0ba);
+}
+.img-fb.t2{ background:linear-gradient(135deg,#fff2d9,#ffe3ad); }
+.img-fb.t3{ background:linear-gradient(135deg,#e9f6ea,#cdecce); }
+.img-fb.t4{ background:linear-gradient(135deg,#e9f0fe,#cfe2fa); }
+.img-fb.t5{ background:linear-gradient(135deg,#f9e9fa,#f0cbe8); }
+.img-fb.t6{ background:linear-gradient(135deg,#eae9fd,#d5d5f8); }
 
-/* Footer */
-footer { text-align:center; padding:40px 20px; background:#fff; box-shadow:0 -5px 20px rgba(0,0,0,0.05); margin-top:50px; }
-.add{
-  margin-right:-100px
+.food-content { padding:13px 14px 14px; display:flex; flex-direction:column; flex:1; }
+.food-content h3 { font-size:15.5px; margin-bottom:5px; color:#3a2c28; }
+.food-content p { font-size:12px; margin-bottom:9px; color:#888; line-height:1.45;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.food-content .price { font-weight:700; font-size:15px; color:var(--brand); margin-bottom:9px; }
+.veg-tag{
+  display:inline-block; font-size:10px; font-weight:700; color:#1e9e46;
+  background:#e6f7ec; border:1px solid #bfe8cd; border-radius:999px; padding:1.5px 8px;
+  margin-left:6px; vertical-align:middle;
 }
-/* Responsive */
-  .add{
-    margin-right:-100px !important;
-    margin-left:-100px !important;
-  }
-@media(max-width:1024px){ .food-item { flex:0 0 200px; } }
+.spicy-tag{
+  display:inline-block; font-size:10px; font-weight:700; color:#d9480f;
+  background:#fdeee0; border:1px solid #f8cfae; border-radius:999px; padding:1.5px 8px;
+  margin-left:6px; vertical-align:middle;
+}
+/* ---- Add control (checkbox kept, styled nicer) ---- */
+.pick-row{ display:flex; align-items:center; justify-content:space-between; margin-top:auto; }
+label.pick{
+  display:inline-flex; align-items:center; gap:8px; margin-left:auto;
+  font-size:13px; font-weight:700; color:var(--brand);
+  border:1.5px solid var(--brand); border-radius:999px; padding:6px 14px 6px 11px;
+  cursor:pointer; transition:0.2s; user-select:none;
+}
+label.pick:hover{ background:#fff2ed; }
+label.pick input.add{
+  width:17px; height:17px; margin:0; accent-color:var(--brand); cursor:pointer;
+}
+label.pick:has(input.add:checked){ background:var(--brand); color:#fff; box-shadow:0 4px 12px rgba(255,99,71,.4); }
+label.pick:has(input.add:checked)::before{ content:'✓ '; }
+
+/* ---------- Order section ---------- */
+.order-section{
+  max-width:520px; margin:30px auto 10px; padding:28px 24px 30px;
+  background:#fff; border-radius:22px; box-shadow:0 12px 34px rgba(255,99,71,.12);
+  scroll-margin-top:130px;
+}
+.order-section h1{ color:var(--brand); font-size:22px; margin-bottom:18px; }
+.order-section label{ font-size:13px; font-weight:600; color:#8a6a60; }
+#selectedItems{
+  background:#fff5f0 !important; border-color:var(--line) !important; cursor:not-allowed;
+}
+.order-section input{
+  padding:12px 14px; border-radius:12px; border:1.5px solid var(--line);
+  font-size:15px; width:100%; outline:none; background:#fff; transition:0.2s;
+}
+.order-section input:focus{ border-color:var(--brand); box-shadow:0 0 0 3px rgba(255,99,71,.14); }
+#table-note{ text-align:center; color:#1e9e46; margin:2px 0 4px; font-size:13px; }
+#submit{
+  background:linear-gradient(120deg,var(--brand),var(--brand-dark)); color:#fff;
+  border:none; padding:14px; border-radius:14px; font-size:16px; font-weight:700;
+  transition:.25s; box-shadow:0 10px 22px rgba(255,99,71,.4); margin-top:4px;
+}
+#submit:hover{ transform:translateY(-2px); box-shadow:0 14px 26px rgba(255,99,71,.5); }
+
+/* ---------- Footer ---------- */
+footer { text-align:center; padding:40px 20px; background:#fff; box-shadow:0 -5px 20px rgba(0,0,0,0.05); margin-top:45px; }
+
+/* ---------- Mobile order CTA ---------- */
+.order-cta{
+  position:fixed; left:14px; right:14px; bottom:14px; z-index:950; display:none;
+  background:linear-gradient(120deg,var(--brand),var(--brand-dark)); color:#fff;
+  border:none; border-radius:999px; padding:14px 22px; font-size:15px; font-weight:700;
+  box-shadow:0 10px 26px rgba(255,99,71,.5); justify-content:center; gap:8px;
+}
+.order-cta:active{ transform:scale(.97); }
+
+/* ---------- Responsive ---------- */
+@media(max-width:1024px){ .food-item { flex:0 0 205px; } }
 @media(max-width:768px){
-    .indicator{
-    margin-left:420px !important;
-    font-size:30px;
-    
-
-  }  .add{
-    margin-right:-50px !important;
-    margin-left:-50px !important;
-  } .food-item { flex:0 0 160px; } header { padding:10px 20px; } }
-@media(max-width:480px){ 
-  .food-item { flex:0 0 140px; }
-  .food-item img { height:120px; } 
-  .food-content { padding:10px; }
-  .menu-section h2 { font-size:24px; }
-  .hero-bg { height:180px; } 
-  .add{
-    margin-right:-50px !important;
-    margin-left:-50px !important;
-  }
-  .indicator{
-    margin-left:180px !important;
-    font-size:30px;
-    font-weight:800;
-   color:#ff6347
-
-  }
-  .order-section{
-    margin-left:20px;
-    margin-right:20px
-  }
+  header{ padding:10px 16px; } header h1{ font-size:19px; }
+  .food-item { flex:0 0 168px; }
+  .food-item img, .img-fb { height:130px; }
+  .img-fb{ font-size:42px; }
+  .food-content h3{ font-size:13.5px; }
+  .quick-nav{ top:47px; }
+  #menuSearch{ width:150px; }
+  .order-cta{ display:flex; }
+  section{ scroll-margin-top:110px; }
 }
-
-h1 { text-align:center; color:#ff6347; margin-bottom:30px; }
-
-form {
-  max-width:500px;
-  margin:0 auto;
-  display:flex;
-  flex-direction:column;
-  gap:15px;
-}
-
-input, textarea {
-  padding:10px;
-  border-radius:10px;
-  border:1px solid #ccc;
-  font-size:16px;
-  width:100%;
-}
-
-input[readonly] {
-  background:#ffeaea;
-  cursor:not-allowed;
-}
-
-/* Submit button */
-button {
-  background:#ff6347;
-  color:#fff;
-  border:none;
-  padding:12px;
-  border-radius:10px;
-  cursor:pointer;
-  font-size:16px;
-  transition:0.3s;
-}
-
-button:hover { background:#e55336; }
-
 @media(max-width:480px){
-  .floating-card { min-width:140px; }
-  .floating-card img { height:100px; }
+  .food-item { flex:0 0 150px; }
+  .food-item img, .img-fb { height:115px; }
+  .img-fb{ font-size:36px; }
+  .food-content { padding:10px 11px 12px; }
+  .food-content p{ font-size:11px; }
+  .indicator{ right:12px; top:120px; font-size:22px; }
+  .hero-bg{ height:210px; }
+  .staff-link{ font-size:12px; padding:5px 10px; }
+  #menuSearch{ flex:1; }
+  section h2{ font-size:21px; }
+  .order-cta{ font-size:13.5px; padding:12px 18px; }
 }
 </style>
 </head>
@@ -192,161 +226,462 @@ button:hover { background:#e55336; }
 
 <header>
   <h1>Raman Restaurant</h1>
-  <a  class="order-icon">
-    🛒<span id="cart-count">0</span>
-  </a>
+  <div class="header-right">
   
+    <a class="order-icon">🛒<span id="cart-count">0</span></a>
+  </div>
 </header>
-<h1 class="indicator">Click Here! ⬆</h1>
+<div class="indicator">Click Here! ⬆</div>
+
+<!-- Quick category jump-bar -->
+<nav class="quick-nav" id="quickNav">
+  <a href="#sec-popular" class="active">🔥 Popular</a>
+  <a href="#sec-nepali"> Nepali</a>
+  <a href="#sec-indian"> Indian</a>
+  <a href="#sec-suggested">🍕 Suggested</a>
+  <input id="menuSearch" type="search" placeholder="🔍 Search dishes…">
+</nav>
+
 <div class="hero-bg" id="heroBg"></div>
 
-<section class="menu-section">
+<section id="sec-suggested">
   <h2>Suggested Items</h2>
+  <span class="sub">Our chef's picks — start here 😊</span>
   <div class="static-row">
+
     <div class="food-item">
-      <img src="https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=800&q=80" alt="Pizza">
+      <img src="https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=800&q=80" alt="Pizza"
+           onerror="imgFallback(this,'🍕')">
       <div class="food-content">
         <h3>Margherita Pizza</h3>
-        <p>Classic pizza with mozzarella, tomato, basil.</p>
-        <div class="price">$12.99</div>
-        <label><input class="add" type="checkbox" data-name=" Margherita Pizza"> Add</label>
+        <p>Classic pizza with mozzarella, tomato &amp; basil.</p>
+        <div class="price">Rs. 950</div>
+        <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="Margherita Pizza"> Add</label></div>
       </div>
     </div>
-    <div class="food-item">
-      <img src="https://www.sargento.com/assets/Uploads/Recipe/Image/cheddarbaconcheeseburger__FillWzgwMCw4MDBd.jpg" alt="Burger">
-      <div class="food-content">
-        <h3>Cheeseburger</h3>
-        <p>Juicy beef patty, cheddar, lettuce, tomato with mozzarella, sauce.</p>
-        <div class="price">$10.99</div>
-        <label><input class="add"  type="checkbox" data-name=" Cheese Burger"> Add</label>
-      </div>
-    </div>
-  </div>
 
+    <div class="food-item">
+      <img src="https://www.sargento.com/assets/Uploads/Recipe/Image/cheddarbaconcheeseburger__FillWzgwMCw4MDBd.jpg" alt="Burger"
+           onerror="imgFallback(this,'🍔')">
+      <div class="food-content">
+        <h3>Cheese Burger</h3>
+        <p>Juicy beef patty, cheddar, lettuce &amp; house sauce.</p>
+        <div class="price">Rs. 850</div>
+        <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="Cheese Burger"> Add</label></div>
+      </div>
+    </div>
+
+    <div class="food-item">
+      <div class="img-fb t2"> <img src="https://nickskitchen.com/wp-content/uploads/2025/08/NK_Butter-Ckn_1-500x500.jpg" alt ="Butter chicken"></div>
+      <div class="food-content">
+        <h3>Butter Chicken</h3>
+       
+        <p>Creamy tomato gravy with tender tandoori chicken.</p>
+        <div class="price">Rs. 950</div>
+        <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="Butter Chicken"> Add</label></div>
+      </div>
+    </div>
+
+    <div class="food-item">
+      <div class="img-fb t5"><img src="data:image/jpeg;base64,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"></div>
+      <div class="food-content">
+        <h3>Newari Khaja Set</h3>
+        <p>Samay baji, bara, chatamari, aloo &amp; achar sampler.</p>
+        <div class="price">Rs. 750</div>
+        <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="Newari Khaja Set"> Add</label></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section id="sec-popular">
   <h2>Popular Menu</h2>
+  <span class="sub">Everyone's favourites — swipe to see more ➡</span>
   <div class="row-container">
     <button class="scroll-btn scroll-left">&#8592;</button>
     <div class="menu-row" id="row1">
-      <!-- Multiple food items -->
+
       <div class="food-item">
-        <img src="https://static01.nyt.com/images/2024/09/10/multimedia/JG-Parmesan-Crusted-Salmon-Caesar-Saladrex-kjpb/JG-Parmesan-Crusted-Salmon-Caesar-Saladrex-kjpb-mediumSquareAt3X.jpg" alt="Salad">
+        <img src="https://static01.nyt.com/images/2024/09/10/multimedia/JG-Parmesan-Crusted-Salmon-Caesar-Saladrex-kjpb/JG-Parmesan-Crusted-Salmon-Caesar-Saladrex-kjpb-mediumSquareAt3X.jpg" alt="Salad"
+             onerror="imgFallback(this,'🥗')">
         <div class="food-content">
-          <h3>Caesar Salad</h3>
-          <p>Romaine, parmesan, croutons, Caesar dressing.</p>
-          <div class="price">$9.99</div>
-          <label><input class="add" type="checkbox" data-name=" Caesar Salad"> Add</label>
+          <h3>Caesar Salad<span class="veg-tag">🌿 Veg</span></h3>
+          <p>Crisp romaine, parmesan, croutons &amp; Caesar dressing.</p>
+          <div class="price">Rs. 780</div>
+          <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="Caesar Salad"> Add</label></div>
         </div>
       </div>
+
       <div class="food-item">
-        <img src="https://www.allrecipes.com/thmb/zb8muWE6CQ5XjclY_LQ2i-QwxN0=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/17981-one-bowl-chocolate-cake-iii-DDMFS-beauty-4x3-d2e182087e4b42a3a281a0a355ea60d1.jpg" alt="Chocolate Cake">
+        <img src="https://www.allrecipes.com/thmb/zb8muWE6CQ5XjclY_LQ2i-QwxN0=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/17981-one-bowl-chocolate-cake-iii-DDMFS-beauty-4x3-d2e182087e4b42a3a281a0a355ea60d1.jpg" alt="Chocolate Cake"
+             onerror="imgFallback(this,'🍫')">
         <div class="food-content">
-          <h3>Chocolate Cake</h3>
+          <h3>Chocolate Cake<span class="veg-tag">🌿 Veg</span></h3>
           <p>Rich, moist chocolate cake with ganache.</p>
-          <div class="price">$6.99</div>
-          <label><input class="add" type="checkbox" data-name=" Chocolate Cake"> Add</label>
+          <div class="price">Rs. 550</div>
+          <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="Chocolate Cake"> Add</label></div>
         </div>
       </div>
+
       <div class="food-item">
-        <img src="https://ticktocktea.com/cdn/shop/articles/Ice-Cream-Sundae-800x800px-min.jpg?v=1657010846" alt="Ice Cream">
+        <img src="https://ticktocktea.com/cdn/shop/articles/Ice-Cream-Sundae-800x800px-min.jpg?v=1657010846" alt="Ice Cream"
+             onerror="imgFallback(this,'🍨')">
         <div class="food-content">
-          <h3>Ice Cream Sundae</h3>
-          <p>Vanilla ice cream with chocolate drizzle.</p>
-          <div class="price">$5.50</div>
-          <label><input class="add" type="checkbox" data-name="Ice Cream Sundae"> Add</label>
+          <h3>Ice Cream Sundae<span class="veg-tag">🌿 Veg</span></h3>
+          <p>Vanilla ice cream with warm chocolate drizzle.</p>
+          <div class="price">Rs. 450</div>
+          <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="Ice Cream Sundae"> Add</label></div>
         </div>
       </div>
+
       <div class="food-item">
-        <img src="https://www.inspiredtaste.net/wp-content/uploads/2022/10/Baked-French-Fries-Recipe-1200.jpg" alt="French Fries">
+        <img src="https://www.inspiredtaste.net/wp-content/uploads/2022/10/Baked-French-Fries-Recipe-1200.jpg" alt="French Fries"
+             onerror="imgFallback(this,'🍟')">
         <div class="food-content">
-          <h3>French Fries</h3>
-          <p>Crispy golden fries with ketchup,tomato with mozzarella,.</p>
-          <div class="price">$3.50</div>
-          <label><input class="add" type="checkbox" data-name=" French Fries"> Add</label>
+          <h3>French Fries<span class="veg-tag">🌿 Veg</span></h3>
+          <p>Crispy golden fries with ketchup.</p>
+          <div class="price">Rs. 300</div>
+          <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="French Fries"> Add</label></div>
         </div>
       </div>
+
       <div class="food-item">
-        <img src="https://www.modernhoney.com/wp-content/uploads/2023/01/Chipotle-Chicken-Tacos-2-crop-scaled.jpg" alt="Tacos">
+        <img src="https://www.modernhoney.com/wp-content/uploads/2023/01/Chipotle-Chicken-Tacos-2-crop-scaled.jpg" alt="Tacos"
+             onerror="imgFallback(this,'🌮')">
         <div class="food-content">
-          <h3>Chicken Tacos</h3>
-          <p>Soft tortillas with seasoned chicken, salsa, cheese.</p>
-          <div class="price">$8.99</div>
-          <label><input class="add" type="checkbox" data-name=" Chicken Tacos"> Add</label>
+          <h3>Chicken Tacos<span class="spicy-tag">🌶️ Spicy</span></h3>
+          <p>Soft tortillas with seasoned chicken, salsa &amp; cheese.</p>
+          <div class="price">Rs. 720</div>
+          <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="Chicken Tacos"> Add</label></div>
         </div>
       </div>
+
       <div class="food-item">
-        <img src="https://media.istockphoto.com/id/1224916255/photo/sushi-maki-with-salmon-shrimp-cucumber.jpg?s=612x612&w=0&k=20&c=qIu0V_qKpP1R2xWMxID0tRGPDhOivHQ9CJFiZLcXpI8=" alt="Sushi">
+        <img src="https://media.istockphoto.com/id/1224916255/photo/sushi-maki-with-salmon-shrimp-cucumber.jpg?s=612x612&w=0&k=20&c=qIu0V_qKpP1R2xWMxID0tRGPDhOivHQ9CJFiZLcXpI8=" alt="Sushi"
+             onerror="imgFallback(this,'🍣')">
         <div class="food-content">
           <h3>Sushi Platter</h3>
-          <p>Assorted fresh sushi with wasabi and soy sauce, mozzarella.</p>
-          <div class="price">$19.99</div>
-          <label><input class="add" type="checkbox" data-name="dal-bhat"> Add</label>
+          <p>Assorted fresh sushi with wasabi &amp; soy sauce.</p>
+          <div class="price">Rs. 2200</div>
+          <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="Sushi Platter"> Add</label></div>
         </div>
       </div>
+
       <div class="food-item">
-        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQcoXWLIiYs_u54dOx8J_1DpCZNKBKcQJe0A&s" alt="Steak">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQcoXWLIiYs_u54dOx8J_1DpCZNKBKcQJe0A&s" alt="Steak"
+             onerror="imgFallback(this,'🥩')">
         <div class="food-content">
           <h3>Grilled Steak</h3>
-          <p>Juicy grilled steak with herbs and butter with mozzarella,.</p>
-          <div class="price">$22.99</div>
-          <label><input class="add" type="checkbox" data-name="Grilled-steak"> Add</label>
+          <p>Juicy grilled steak with herbs &amp; butter.</p>
+          <div class="price">Rs. 2600</div>
+          <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="Grilled Steak"> Add</label></div>
         </div>
       </div>
+
       <div class="food-item">
-        <img src="https://www.shutterstock.com/image-photo/delicious-peperoni-pizza-photo-top-260nw-2517655615.jpg" alt="Pizza">
+        <img src="https://www.shutterstock.com/image-photo/delicious-peperoni-pizza-photo-top-260nw-2517655615.jpg" alt="Pizza"
+             onerror="imgFallback(this,'🍕')">
         <div class="food-content">
-          <h3>Pepperoni Pizza</h3>
-          <p>Classic pizza with pepperoni and cheese.</p>
-          <div class="price">$13.99</div>
-          <label><input class="add" type="checkbox" data-name=" Peperoni Pizza"> Add</label>
+          <h3>Pepperoni Pizza<span class="spicy-tag">🌶️ Spicy</span></h3>
+          <p>Classic pizza with pepperoni &amp; cheese.</p>
+          <div class="price">Rs. 1150</div>
+          <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="Pepperoni Pizza"> Add</label></div>
         </div>
       </div>
+
       <div class="food-item">
-        <img src="https://www.licious.in/blog/wp-content/uploads/2020/12/Penne-Alfredo.jpg" alt="Pasta">
+        <img src="https://www.licious.in/blog/wp-content/uploads/2020/12/Penne-Alfredo.jpg" alt="Pasta"
+             onerror="imgFallback(this,'🍝')">
         <div class="food-content">
           <h3>Alfredo Pasta</h3>
-          <p>Creamy fettuccine with chicken and parmesan with mozzarella,.</p>
-          <div class="price">$14.99</div>
-          <label><input  class="add" type="checkbox" data-name="Alfredo Pasta"> Add</label>
+          <p>Creamy fettuccine with chicken &amp; parmesan.</p>
+          <div class="price">Rs. 1050</div>
+          <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="Alfredo Pasta"> Add</label></div>
         </div>
       </div>
+
     </div>
     <button class="scroll-btn scroll-right">&#8594;</button>
   </div>
+</section>
 
-  <h2>More Items</h2>
-  <div class="static-row">
-    <div class="food-item">
-      <img src="https://media.istockphoto.com/id/1224916255/photo/sushi-maki-with-salmon-shrimp-cucumber.jpg?s=612x612&w=0&k=20&c=qIu0V_qKpP1R2xWMxID0tRGPDhOivHQ9CJFiZLcXpI8=" alt="Sushi">
-      <div class="food-content">
-        <h3>Sushi Platter</h3>
-        <p>Assorted fresh sushi with wasabi and soy sauce.</p>
-        <div class="price">$19.99</div>
-        <label ><input class="add" type="checkbox" data-name="Sushi Platter"> Add</label>
+<section id="sec-nepali">
+  <h2> Nepali Specials</h2>
+  <span class="sub">Momos, khaja &amp; thali — taste of Nepal</span>
+  <div class="row-container">
+    <button class="scroll-btn scroll-left">&#8592;</button>
+    <div class="menu-row">
+
+      <div class="food-item">
+        <div class="img-fb"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTfTchu5UE66R9Gb9RoEiM-13iOyGBvaaZ3mbcyuTTzfw&s=10"></div>
+        <div class="food-content">
+          <h3>Steamed Veg Momo<span class="veg-tag">🌿 Veg</span></h3>
+          <p>Soft dumplings with veg filling &amp; chutney.</p>
+          <div class="price">Rs. 250</div>
+          <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="Steamed Veg Momo"> Add</label></div>
+        </div>
       </div>
-    </div>
-    <div class="food-item">
-      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQcoXWLIiYs_u54dOx8J_1DpCZNKBKcQJe0A&s" alt="Steak">
-      <div class="food-content">
-        <h3>Grilled Steak</h3>
-        <p>Juicy grilled steak with herbs and butter.</p>
-        <div class="price">$22.99</div>
-        <label><input class="add" type="checkbox" data-name="Grilled Steak"> Add</label>
+
+
+
+      <div class="food-item">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/a/a1/Momo_nepal.jpg" alt="Jhol Momo"
+             onerror="imgFallback(this,'🥟')">
+        <div class="food-content">
+          <h3>Jhol Momo<span class="spicy-tag">🌶️ Spicy</span></h3>
+          <p>Momo served in spicy-tangy achar broth.</p>
+          <div class="price">Rs. 350</div>
+          <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="Jhol Momo"> Add</label></div>
+        </div>
       </div>
+
+      <div class="food-item">
+        <div class="img-fb t4"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6yM99me_ACwU3h83grOOMCQPCclVPg1iDH0M8dnrWJA&s"></div>
+        <div class="food-content">
+          <h3>Fried Momo</h3>
+          <p>Golden-fried momo, extra crispy outside.</p>
+          <div class="price">Rs. 320</div>
+          <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="Fried Momo"> Add</label></div>
+        </div>
+      </div>
+
+  
+
+      <div class="food-item">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Sekuwa.jpg/1280px-Sekuwa.jpg" alt="Sekuwa"
+             onerror="imgFallback(this,'🍢')">
+        <div class="food-content">
+          <h3>Chicken Sekuwa<span class="spicy-tag">🌶️ Spicy</span></h3>
+          <p>Charcoal-grilled chicken skewers, Newari spices.</p>
+          <div class="price">Rs. 650</div>
+          <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="Chicken Sekuwa"> Add</label></div>
+        </div>
+      </div>
+
+      <div class="food-item">
+        <div class="img-fb t2"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRvnd-AGEnINN7C-uTWYPixpYNcYskfH0LLE4oB2Cu3YA&s=10"></div>
+        <div class="food-content">
+          <h3>Dal Bhat Tarkari<span class="veg-tag">🌿 Veg</span></h3>
+          <p>Nepal's national plate — rice, dal, curry &amp; achar.</p>
+          <div class="price">Rs. 450</div>
+          <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="Dal Bhat Tarkari"> Add</label></div>
+        </div>
+      </div>
+
+      <div class="food-item">
+        <div class="img-fb t3"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSiO-2nwEN5xKFQnSclAgneWiuY6q1IEDDGf0R5zAoo2A&s=10"></div>
+        <div class="food-content">
+          <h3>Chicken Thali</h3>
+          <p>Chicken curry thali — rice, dal, salad, papad.</p>
+          <div class="price">Rs. 620</div>
+          <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="Chicken Thali"> Add</label></div>
+        </div>
+      </div>
+
+      <div class="food-item">
+        <div class="img-fb t5"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRlPSbXDfWQXhazhuTN-_8qy4n4GpJrhG2pA7QldRdoTQ&s=10"></div>
+        <div class="food-content">
+          <h3>Mutton Thali<span class="spicy-tag">🌶️ Spicy</span></h3>
+          <p>Slow-cooked mutton curry with rice &amp; sides.</p>
+          <div class="price">Rs. 850</div>
+          <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="Mutton Thali"> Add</label></div>
+        </div>
+      </div>
+
+ 
+
+      <div class="food-item">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/e/e9/Meat_Chatamari.jpg" alt="Chatamari"
+             onerror="imgFallback(this,'🫓')">
+        <div class="food-content">
+          <h3>Chatamari</h3>
+          <p>Newari rice-flour crepe with spiced topping.</p>
+          <div class="price">Rs. 400</div>
+          <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="Chatamari"> Add</label></div>
+        </div>
+      </div>
+
+     
+
+      <div class="food-item">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/c/c0/Sel_Roti.jpg" alt="Sel Roti"
+             onerror="imgFallback(this,'🍩')">
+        <div class="food-content">
+          <h3>Sel Roti<span class="veg-tag">🌿 Veg</span></h3>
+          <p>Sweet ring-shaped rice bread, fried fresh.</p>
+          <div class="price">Rs. 120</div>
+          <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="Sel Roti"> Add</label></div>
+        </div>
+      </div>
+
+     
+
+  
+
+      <div class="food-item">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Homemade_Chow_mein_with_shrimps_and_meat_with_a_choy_and_Choung.jpg/1280px-Homemade_Chow_mein_with_shrimps_and_meat_with_a_choy_and_Choung.jpg" alt="Chowmein"
+             onerror="imgFallback(this,'🍝')">
+        <div class="food-content">
+          <h3>Nepali Chowmein</h3>
+          <p>Wok-tossed noodles with local masala.</p>
+          <div class="price">Rs. 320</div>
+          <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="Nepali Chowmein"> Add</label></div>
+        </div>
+      </div>
+
+      <div class="food-item">
+        <div class="img-fb t3">🥘</div>
+        <div class="food-content">
+          <h3>Aloo Tama<span class="veg-tag">🌿 Veg</span><span class="spicy-tag">🌶️</span></h3>
+          <p>Potato &amp; bamboo shoot curry, tangy &amp; spicy.</p>
+          <div class="price">Rs. 350</div>
+          <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="Aloo Tama"> Add</label></div>
+        </div>
+      </div>
+
+      <div class="food-item">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Gundruk_NP.jpg/1280px-Gundruk_NP.jpg" alt="Gundruk"
+             onerror="imgFallback(this,'🥣')">
+        <div class="food-content">
+          <h3>Gundruk ko Jhol<span class="veg-tag">🌿 Veg</span></h3>
+          <p>Fermented leafy greens soup, classic taste.</p>
+          <div class="price">Rs. 250</div>
+          <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="Gundruk ko Jhol"> Add</label></div>
+        </div>
+      </div>
+
+    
+
+     
+
     </div>
+    <button class="scroll-btn scroll-right">&#8594;</button>
   </div>
 </section>
-<div class="order-section">
+
+<section id="sec-indian">
+  <h2> Indian Favorites</h2>
+  <span class="sub">From biryani to masala dosa — full of flavour</span>
+  <div class="row-container">
+    <button class="scroll-btn scroll-left">&#8592;</button>
+    <div class="menu-row">
+
+      <div class="food-item">
+        <div class="img-fb t4"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSKpdZg1nSbLf5RlGngVDuAYLLep--_hQt1it_LlqoCfA&s=10"></div>
+        <div class="food-content">
+          <h3>Veg Samosa (2 pc)<span class="veg-tag">🌿 Veg</span></h3>
+          <p>Crisp pastry with spiced potato-pea filling.</p>
+          <div class="price">Rs. 160</div>
+          <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="Veg Samosa"> Add</label></div>
+        </div>
+      </div>
+
+
+   
+
+
+
+      <div class="food-item">
+        <div class="img-fb t3"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRT_MPPoND1Tu3stx2h4m2Ms5fjh56wKTOr1O9jbHaG0w&s=10"></div>
+        <div class="food-content">
+          <h3>Palak Paneer<span class="veg-tag">🌿 Veg</span></h3>
+          <p>Silky spinach gravy with soft paneer.</p>
+          <div class="price">Rs. 750</div>
+          <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="Palak Paneer"> Add</label></div>
+        </div>
+      </div>
+
+
+
+      <div class="food-item">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Chole_Bhature_from_Nagpur.JPG/1280px-Chole_Bhature_from_Nagpur.JPG" alt="Chole Bhature"
+             onerror="imgFallback(this,'🫓')">
+        <div class="food-content">
+          <h3>Chole Bhature<span class="veg-tag">🌿 Veg</span></h3>
+          <p>Fluffy bhature with spicy chole curry.</p>
+          <div class="price">Rs. 580</div>
+          <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="Chole Bhature"> Add</label></div>
+        </div>
+      </div>
+
+      <div class="food-item">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Masala_Dosa_2023.jpg/1280px-Masala_Dosa_2023.jpg" alt="Masala Dosa"
+             onerror="imgFallback(this,'🌯')">
+        <div class="food-content">
+          <h3>Masala Dosa<span class="veg-tag">🌿 Veg</span></h3>
+          <p>Crispy rice crepe, potato masala, chutneys.</p>
+          <div class="price">Rs. 420</div>
+          <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="Masala Dosa"> Add</label></div>
+        </div>
+      </div>
+
+      <div class="food-item">
+        <div class="img-fb t6"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRmRJBxnITiWW6TDH33tGDU_g2Hpo1-WdilumflReBrgw&s=10"></div>
+        <div class="food-content">
+          <h3>Pav Bhaji<span class="veg-tag">🌿 Veg</span><span class="spicy-tag">🌶️</span></h3>
+          <p>Buttery veg bhaji with toasted pav.</p>
+          <div class="price">Rs. 550</div>
+          <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="Pav Bhaji"> Add</label></div>
+        </div>
+      </div>
+
+      <div class="food-item">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/Chickentandoori.jpg" alt="Tandoori Chicken"
+             onerror="imgFallback(this,'🍗')">
+        <div class="food-content">
+          <h3>Tandoori Chicken<span class="spicy-tag">🌶️ Spicy</span></h3>
+          <p>Half chicken, clay-oven charred &amp; juicy.</p>
+          <div class="price">Rs. 950</div>
+          <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="Tandoori Chicken"> Add</label></div>
+        </div>
+      </div>
+
+
+
+      <div class="food-item">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/4/4e/Annapurna_Naan.jpg" alt="Butter Naan"
+             onerror="imgFallback(this,'🫓')">
+        <div class="food-content">
+          <h3>Butter Naan<span class="veg-tag">🌿 Veg</span></h3>
+          <p>Pillowy tandoor naan with butter.</p>
+          <div class="price">Rs. 150</div>
+          <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="Butter Naan"> Add</label></div>
+        </div>
+      </div>
+
+      <div class="food-item">
+        <div class="img-fb t3"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS8HiGab6pzo_DwH-6KvrPZCKO8mIFzy2vaNtxYdnt4-A&s=10"></div>
+        <div class="food-content">
+          <h3>Aloo Paratha (2 pc)<span class="veg-tag">🌿 Veg</span></h3>
+          <p>Stuffed potato paratha with curd &amp; pickle.</p>
+          <div class="price">Rs. 220</div>
+          <div class="pick-row"><label class="pick"><input class="add" type="checkbox" data-name="Aloo Paratha"> Add</label></div>
+        </div>
+      </div>
+
+
+
+    </div>
+    <button class="scroll-btn scroll-right">&#8594;</button>
+  </div>
+</section>
+
+
+  </div>
+</section>
+
+<div class="order-section" id="orderSection">
 <h1>Your Order</h1>
 
-
-
 <form method="POST" action="costumer.php">
-  <label>Selected Items      :</label>
+  <p id="table-note" style="margin:0;">&nbsp;</p>
+
+  <label>Selected Items :</label>
   <input name="selected" type="text" id="selectedItems" placeholder="Your selected items" readonly>
 
   <label>Table Number :</label>
   <input name="table" type="text" id="customerName" placeholder="Enter your table number">
-
 
   <button id="submit" type="submit">Place Order</button>
 </form>
@@ -354,79 +689,108 @@ button:hover { background:#e55336; }
 
 <footer>
   &copy; 2025 Delicious Bites. All Rights Reserved.
+  <br><span style="font-size:12px;color:#999;">Nepali &amp; Indian Kitchen  — Thank you for dining with us </span>
 </footer>
 
+<button class="order-cta" id="orderCta">🛒 0 items selected — Tap to Order ⬆</button>
+
 <script>
-// Horizontal scroll functionality
+// Horizontal scroll functionality (works for every menu row)
 document.querySelectorAll('.row-container').forEach(container => {
-  const row = container.querySelector('.menu-row');       
-  const leftBtn = container.querySelector('.scroll-left'); 
+  const row      = container.querySelector('.menu-row');
+  const leftBtn  = container.querySelector('.scroll-left');
   const rightBtn = container.querySelector('.scroll-right');
+  if (!row) return;
 
-  leftBtn.addEventListener('click', () => {
-    row.scrollBy({ left: -250, behavior: 'smooth' });     
-  });
-
-  rightBtn.addEventListener('click', () => {
-    row.scrollBy({ left: 250, behavior: 'smooth' });      
-  });
+  leftBtn.addEventListener('click',  () => row.scrollBy({ left:-260, behavior:'smooth' }));
+  rightBtn.addEventListener('click', () => row.scrollBy({ left: 260, behavior:'smooth' }));
 });
 
 // Hero disappear on scroll
 const hero = document.getElementById('heroBg');
 window.addEventListener('scroll', () => {
-  hero.style.opacity = 1 - window.scrollY/200;
+  hero.style.opacity = 1 - window.scrollY/220;
 });
 
-// Cart counter
-const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-const cartCount = document.getElementById('cart-count');
+// Cart counter + selected items builder
+const checkboxes  = document.querySelectorAll('input.add');
+const cartCount   = document.getElementById('cart-count');
+const selectedItems = document.getElementById('selectedItems');
+const indicator   = document.querySelector('.indicator');
+const cta         = document.getElementById('orderCta');
 
-checkboxes.forEach(box => {
-  box.addEventListener('change', () => {
-    const checkedCount = document.querySelectorAll('input[type="checkbox"]:checked').length;
-    cartCount.textContent = checkedCount;
-  
+function applySelection(){
+  const picked = [];
+  let count = 0;
+  checkboxes.forEach(box => {
+    if (box.checked){ count++; picked.push(box.dataset.name); }
   });
-});
-let selectedItems =document.getElementById('selectedItems');
-function update(){
-  const selectedNames=[];
-checkboxes.forEach(box =>{
-  
-if(box.checked){
-  selectedNames.push(box.dataset.name);
+  cartCount.textContent = count;
+  selectedItems.value = picked.join(', ');
+  indicator.style.display = count > 0 ? 'block' : 'none';
+  cta.textContent = count > 0
+    ? '🛒 ' + count + ' item' + (count > 1 ? 's' : '') + ' selected — Tap to Order ⬆'
+    : '🛒 0 items selected — Tap to Order ⬆';
 }
-})
-selectedItems.value=selectedNames.join(', ');
+checkboxes.forEach(box => box.addEventListener('change', applySelection));
 
-}
-let indicator = document.querySelector('.indicator');
-checkboxes.forEach(box =>{
-  box.addEventListener('change',()=>{
-    update();
-    if(box.checked){
-indicator.style.display = 'block';
-}
-  });
-  
-
-})
-let order = document.querySelector('.order-icon');
-let orderview = document.querySelector('.order-section');
-order.addEventListener('click',()=>{
-  orderview.scrollIntoView({behavior:"smooth"});
+// Cart icon / bottom CTA scroll to the order form
+const orderView = document.querySelector('.order-section');
+document.querySelector('.order-icon').addEventListener('click', () => {
+  orderView.scrollIntoView({behavior:'smooth'});
   indicator.style.display = 'none';
-})
-//submit form and clear everything//
-let submit = document.getElementById('submit');
-submit.addEventListener('click',()=>{
-  if(selectedItems.value =='' || document.getElementById('customerName').value ==''){
-    alert('Please select items and enter table number');
-  }
-document.getElementById('customerName').value =='';
+});
+document.getElementById('orderCta').addEventListener('click', () => {
+  orderView.scrollIntoView({behavior:'smooth'});
 });
 
+// Quick-nav: highlight the section link you are closest to
+const navLinks = document.querySelectorAll('.quick-nav a[href^="#"]');
+document.querySelectorAll('section[id]').forEach(sec => {
+  const link = document.querySelector('.quick-nav a[href="#'+sec.id+'"]');
+  if (!link) return;
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(en => {
+      if (en.isIntersecting){
+        navLinks.forEach(a => a.classList.remove('active'));
+        link.classList.add('active');
+      }
+    });
+  }, { rootMargin:'-45% 0px -50% 0px' });
+  obs.observe(sec);
+});
+
+// Search filter: hides non-matching dishes (and empty sections), shows all again on clear
+const searchBox = document.getElementById('menuSearch');
+searchBox.addEventListener('input', () => {
+  const q = searchBox.value.trim().toLowerCase();
+  document.querySelectorAll('.food-item').forEach(card => {
+    const name = card.querySelector('h3').textContent.toLowerCase();
+    card.style.display = (!q || name.includes(q)) ? '' : 'none';
+  });
+  document.querySelectorAll('section[id]').forEach(sec => {
+    const visible = [...sec.querySelectorAll('.food-item')].some(c => c.style.display !== 'none');
+    sec.style.display = visible ? '' : 'none';
+  });
+});
+
+// QR support: costumer.html?table=5 fills and locks the table number
+const tableInput = document.getElementById('customerName');
+const qrTable = new URLSearchParams(location.search).get('table') || '';
+if (qrTable) {
+  tableInput.value = qrTable;
+  tableInput.readOnly = true;
+  tableInput.style.background = '#fff5f0';
+  document.getElementById('table-note').textContent = '✔️ You are ordering from Table ' + qrTable;
+}
+
+// Block invalid submissions
+document.querySelector('form').addEventListener('submit', (e) => {
+  if (selectedItems.value === '' || tableInput.value === '') {
+    e.preventDefault();
+    alert('Please select items and enter your table number');
+  }
+});
 </script>
 
 </body>
