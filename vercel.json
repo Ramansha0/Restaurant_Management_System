@@ -3,5 +3,14 @@
     "api/*.php": {
       "runtime": "vercel-php@0.9.0"
     }
-  }
+  },
+  "rewrites": [
+    { "source": "/waiter", "destination": "/api/waiter.php" },
+    { "source": "/waiter.php", "destination": "/api/waiter.php" },
+    { "source": "/history", "destination": "/api/history.php" },
+    { "source": "/history.php", "destination": "/api/history.php" },
+    { "source": "/qr", "destination": "/api/qr.php" },
+    { "source": "/qr.php", "destination": "/api/qr.php" },
+    { "source": "/costumer.php", "destination": "/api/costumer.php" }
+  ]
 }
