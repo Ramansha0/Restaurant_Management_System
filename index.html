@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Raman Restaurant</title>
+  <script>
+    // Send visitors straight to the menu (keeps ?table= from QR codes)
+    location.replace('/costumer.html' + location.search + location.hash);
+  </script>
+  <meta http-equiv="refresh" content="0;url=/costumer.html">
+  <body><a href="/costumer.html">Open the menu</a></body>
+</head>
+</html>

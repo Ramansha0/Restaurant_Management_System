@@ -71,7 +71,7 @@ $base = rtrim(PUBLIC_URL, '/');
     }
 
     if (isStaff) {
-      addCard(base + '/waiter.php', 'Waiter Dashboard');
+      addCard(base + '/api/waiter.php', 'Waiter Dashboard');
       document.querySelector('h1').textContent = '👨‍🍳 Waiter Dashboard QR Code';
     } else {
       for (let t = 1; t <= count; t++) {

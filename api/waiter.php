@@ -180,8 +180,8 @@ footer {
   <aside class="sidebar">
     <h2>Navigation</h2>
     <ul>
-      <li><a href="waiter.php">📋 Orders</a></li>
-      <li><a href="history.php">⚙️ History</a></li>
+      <li><a href="/api/waiter.php">📋 Orders</a></li>
+      <li><a href="/api/history.php">⚙️ History</a></li>
   
     </ul>
   </aside>

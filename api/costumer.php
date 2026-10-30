@@ -73,7 +73,7 @@ $con->close();
   <div class="box">
     <h1>Order Status</h1>
     <p><?php echo $message; ?></p>
-    <a href="costumer.html<?php echo ($table ?? '') !== '' ? '?table=' . urlencode($table) : ''; ?>" class="btn">⬅ Back to Menu</a>
+    <a href="/costumer.html<?php echo ($table ?? '') !== '' ? '?table=' . urlencode($table) : ''; ?>" class="btn">⬅ Back to Menu</a>
   </div>
 
 </body>
