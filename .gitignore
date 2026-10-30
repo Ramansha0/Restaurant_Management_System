@@ -3,3 +3,6 @@ config.local.php
 
 # Scratch work
 practice/
+
+.vercel
+.env*
