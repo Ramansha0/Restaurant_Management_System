@@ -331,7 +331,7 @@ $js_items  = json_encode($selected);
       <div class="sub">Your order has been sent to the kitchen 👨‍🍳</div>
     </div>
     <div class="chips">
-      <span class="chip">🧾 Order <b>#<?php echo $order_id; ?></b></span>
+  
       <span class="chip">🪑 Table <b><?php echo htmlspecialchars($table); ?></b></span>
       <span class="chip"><?php echo count($bill); ?> item<?php echo count($bill) > 1 ? 's' : ''; ?></span>
       <span class="chip">🕒 <?php echo $order_time; ?></span>
@@ -363,7 +363,7 @@ $js_items  = json_encode($selected);
       <div class="bill-head">
         <h2>🧾 Your Bill</h2>
         <div class="receipt-meta">
-          Order #<?php echo $order_id; ?> · Table <?php echo htmlspecialchars($table); ?><br>
+        · Table <?php echo htmlspecialchars($table); ?><br>
           <?php echo $order_time; ?>
         </div>
       </div>
