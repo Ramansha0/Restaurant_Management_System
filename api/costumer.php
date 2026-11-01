@@ -174,7 +174,17 @@ $js_items  = json_encode($selected);
     .topbar h1{ font-size:21px; letter-spacing:.5px; }
     .topbar p{ font-size:12px; opacity:.9; margin-top:2px; }
 
-    .wrap{ max-width:620px; margin:0 auto; padding:22px 16px 46px; }
+    .wrap{ max-width:1040px; margin:0 auto; padding:22px 18px 46px; }
+
+    /* ---------- Top section: confirmation (left) + bill (right) ---------- */
+    .top-grid{
+      display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:18px; align-items:stretch;
+    }
+    .top-grid > .card{ margin-top:0; }
+    @media (max-width:860px){
+      .top-grid{ grid-template-columns:1fr; }   /* stacks vertically on phones/tablets */
+      .wrap{ max-width:640px; }
+    }
 
     .card{
       background:#fff; border-radius:20px; padding:24px 22px;
@@ -231,9 +241,10 @@ $js_items  = json_encode($selected);
     .estimated b{ color:var(--brand-dark); }
 
     /* ---------- Bill ---------- */
-    .bill-head{ display:flex; justify-content:space-between; align-items:center; }
-    .bill-head h2{ color:var(--brand); font-size:19px; }
-    .receipt-meta{ font-size:11.5px; color:#a5968f; margin:4px 0 16px; text-align:right; }
+    .bill-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap; }
+    .bill-head h2{ color:var(--brand); font-size:19px; white-space:nowrap; }
+    .receipt-meta{ font-size:11.5px; color:#a5968f; margin:0 0 14px; text-align:right; }
+    .bill-head .receipt-meta{ margin:0; }
     table.bill{ width:100%; border-collapse:separate; border-spacing:0; font-size:14px; }
     table.bill thead th{
       background:var(--brand); color:#fff; padding:10px 12px; font-size:12px;
@@ -275,11 +286,13 @@ $js_items  = json_encode($selected);
     #rateDone{ color:var(--good); font-weight:700; font-size:15px; padding:14px 0 4px; }
 
     /* ---------- Buttons / misc ---------- */
-    .actions{ text-align:center; margin-top:20px; }
+    .actions{ margin-top:20px; }
     .back{
-      display:inline-block; padding:12px 26px; border-radius:999px; text-decoration:none;
+      display:flex; align-items:center; justify-content:center;
+      width:100%; max-width:420px; margin:0 auto;
+      padding:13px 26px; border-radius:14px; text-decoration:none;
       background:#fff; border:1.5px solid var(--brand); color:var(--brand);
-      font-weight:700; font-size:14px; transition:.25s;
+      font-weight:700; font-size:14.5px; transition:.25s;
     }
     .back:hover{ background:var(--brand); color:#fff; box-shadow:0 8px 20px rgba(255,99,71,.35); }
 
@@ -307,8 +320,11 @@ $js_items  = json_encode($selected);
 
 <?php if ($order_ok): ?>
 
-  <!-- ---------- Confirmation ---------- -->
-  <div class="card">
+  <!-- ---------- Row 1: Order confirmation (left) + Bill (right) ---------- -->
+  <div class="top-grid">
+
+    <!-- Confirmation -->
+    <div class="card">
     <div class="confirm-head">
       <div class="check">✓</div>
       <h2>Order Confirmed!</h2>
@@ -340,18 +356,17 @@ $js_items  = json_encode($selected);
       <div class="step"><div class="dot">🍽️</div><span>Served at Table</span></div>
     </div>
     <div class="estimated">Estimated ready time: <b><?php echo $eta_time; ?></b> · A waiter will bring the food to Table <b><?php echo htmlspecialchars($table); ?></b></div>
-  </div>
-
-  <!-- ---------- Bill ---------- -->
-  <div class="card">
-    <div class="bill-head">
-      <h2>🧾 Your Bill</h2>
-      <div class="receipt-meta" style="margin:0;">
-        Order #<?php echo $order_id; ?> · Table <?php echo htmlspecialchars($table); ?><br>
-        <?php echo $order_time; ?>
-      </div>
     </div>
-    <div class="receipt-meta" style="text-align:left;">&nbsp;</div>
+
+    <!-- Bill -->
+    <div class="card">
+      <div class="bill-head">
+        <h2>🧾 Your Bill</h2>
+        <div class="receipt-meta">
+          Order #<?php echo $order_id; ?> · Table <?php echo htmlspecialchars($table); ?><br>
+          <?php echo $order_time; ?>
+        </div>
+      </div>
 
     <table class="bill">
       <thead>
@@ -380,10 +395,12 @@ $js_items  = json_encode($selected);
       <div class="bill-note">* Items marked with “—” are not on the price list; the final price will be confirmed at the counter.</div>
     <?php endif; ?>
 
-    <div class="thanks-line">🙏 Please pay at the counter or ask your waiter. Thank you &amp; visit again!</div>
-  </div>
+      <div class="thanks-line">🙏 Please pay at the counter or ask your waiter. Thank you &amp; visit again!</div>
+    </div>
 
-  <!-- ---------- Rating ---------- -->
+  </div><!-- /top-grid -->
+
+  <!-- ---------- Row 2 (below): Rating ---------- -->
   <div class="card rating-card">
     <h2>⭐ Rate Your Experience</h2>
     <div class="sub">How was the food and service? Your feedback helps us improve.</div>
