@@ -222,11 +222,11 @@ footer { text-align:center; padding:40px 20px; background:#fff; box-shadow:0 -5p
 }
 /* ===== Veg / Non-Veg toggle switch (new) ===== */
 .veg-switch{--sw-w:92px;display:inline-flex;position:relative;background:#fff;border:1.5px solid var(--brand);border-radius:999px;padding:3px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
-.veg-switch .sw-ind{position:absolute;top:3px;bottom:3px;left:3px;width:var(--sw-w);background:#1e9e46;border-radius:999px;transition:transform .3s cubic-bezier(.34,1.56,.64,1),background .3s,box-shadow .3s;box-shadow:0 2px 6px rgba(30,158,70,.35)}
+.veg-switch .sw-ind{position:absolute;top:3px;bottom:3px;left:3px;width:var(--sw-w);background:var(--brand);border-radius:999px;transition:transform .3s cubic-bezier(.34,1.56,.64,1),background .3s,box-shadow .3s;box-shadow:0 2px 6px rgba(226,113,29,.35)}
 .veg-switch[data-active="non-veg"] .sw-ind{transform:translateX(var(--sw-w));background:#d9480f;box-shadow:0 2px 6px rgba(217,72,15,.35)}
 .veg-switch .sw-btn{position:relative;z-index:1;width:var(--sw-w);background:none;border:none;font-family:inherit;font-size:12.5px;font-weight:600;color:#9a958f;padding:7px 0;cursor:pointer;transition:color .25s;white-space:nowrap}
 .veg-switch .sw-btn:hover{color:#5a4a42}
-.veg-switch[data-active="veg"] .sw-btn[data-mode="veg"]{color:#fff}
+.veg-switch[data-active="all"] .sw-btn[data-mode="all"]{color:#fff}
 .veg-switch[data-active="non-veg"] .sw-btn[data-mode="non-veg"]{color:#fff}
 @media (max-width:380px){.veg-switch{--sw-w:78px}.veg-switch .sw-btn{font-size:11.5px;padding:6px 0}}
 </style>
@@ -236,10 +236,9 @@ footer { text-align:center; padding:40px 20px; background:#fff; box-shadow:0 -5p
 <header>
   <h1>Raman Restaurant</h1>
   <div class="header-right">
-    <a class="staff-link" href="/api/waiter.php">Staff</a>
-    <div class="veg-switch" id="vegSwitch" data-active="">
+    <div class="veg-switch" id="vegSwitch" data-active="all">
       <span class="sw-ind"></span>
-      <button type="button" class="sw-btn" data-mode="veg">🌱 Veg</button>
+      <button type="button" class="sw-btn" data-mode="all">🍽️ All</button>
       <button type="button" class="sw-btn" data-mode="non-veg">🍗 Non-Veg</button>
     </div>
     <a class="order-icon">🛒<span id="cart-count">0</span></a>
@@ -808,22 +807,19 @@ document.querySelector('form').addEventListener('submit', (e) => {
 </script>
 
 <script>
-// ===== Veg / Non-Veg toggle switch (simple JS) =====
-// vegMode '' = show everything | 'veg' = only veg | 'non-veg' = only non-veg
-let vegMode = '';
-const vegSwitch = document.getElementById('vegSwitch');
-
-function applyVegFilter(mode) {
+// ===== All / Non-Veg toggle switch (simple JS) =====
+function applyVegFilter(showAll) {
   const items = document.querySelectorAll('.food-item');
 
   items.forEach(function (item) {
     // An item is VEG if it has the green .veg-tag badge inside it
     const isVeg = item.querySelector('.veg-tag') !== null;
-    const itemType = isVeg ? 'veg' : 'non-veg';
 
-    if (!mode || itemType === mode) {
+    if (showAll || !isVeg) {
+      // show it (All mode, or it is already non-veg)
       item.style.display = 'block';
     } else {
+      // hide veg items in Non-Veg mode
       item.style.display = 'none';
     }
   });
@@ -832,11 +828,8 @@ function applyVegFilter(mode) {
 document.querySelectorAll('#vegSwitch .sw-btn').forEach(function (btn) {
   btn.addEventListener('click', function () {
     const mode = btn.dataset.mode;
-    // clicking the active side again turns the filter OFF (show all items)
-    vegMode = (vegMode === mode) ? '' : mode;
-
-    vegSwitch.dataset.active = vegMode;   // slides the colored indicator
-    applyVegFilter(vegMode);
+    vegSwitch.dataset.active = mode;          // slides the colored indicator
+    applyVegFilter(mode === 'all');
   });
 });
 </script>
