@@ -220,6 +220,10 @@ footer { text-align:center; padding:40px 20px; background:#fff; box-shadow:0 -5p
   section h2{ font-size:21px; }
   .order-cta{ font-size:13.5px; padding:12px 18px; }
 }
+/* ===== Veg / Non-Veg toggle (new) ===== */
+.veg-toggle{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--brand);background:#fff;border:1.5px solid var(--brand);padding:6px 14px;border-radius:20px;cursor:pointer;user-select:none;transition:0.3s}
+.veg-toggle:hover{background:var(--brand);color:#fff}
+.veg-toggle input{accent-color:var(--brand);width:15px;height:15px;cursor:pointer;margin:0}
 </style>
 </head>
 <body>
@@ -228,6 +232,7 @@ footer { text-align:center; padding:40px 20px; background:#fff; box-shadow:0 -5p
   <h1>Raman Restaurant</h1>
   <div class="header-right">
     <a class="staff-link" href="/api/waiter.php">Staff</a>
+    <label class="veg-toggle" for="vegToggle"><input type="checkbox" id="vegToggle"> 🥩 Non-Veg Only</label>
     <a class="order-icon">🛒<span id="cart-count">0</span></a>
   </div>
 </header>
@@ -793,5 +798,35 @@ document.querySelector('form').addEventListener('submit', (e) => {
 });
 </script>
 
+<script>
+// ===== Veg / Non-Veg filter (simple JS) =====
+const vegToggle = document.getElementById('vegToggle');
+
+function applyVegFilter(showNonVegOnly) {
+  const items = document.querySelectorAll('.food-item');   // all menu items
+
+  items.forEach(function (item) {
+    // An item is VEG if it has the green .veg-tag badge inside it
+    const isVeg = item.querySelector('.veg-tag') !== null;
+    const itemType = isVeg ? 'veg' : 'non-veg';
+
+    if (showNonVegOnly) {
+      // If box is checked, hide everything except non-veg items
+      if (itemType === 'non-veg') {
+        item.style.display = 'block';
+      } else {
+        item.style.display = 'none';
+      }
+    } else {
+      // If unchecked, show all items normally
+      item.style.display = 'block';
+    }
+  });
+}
+
+vegToggle.addEventListener('change', function () {
+  applyVegFilter(this.checked);
+});
+</script>
 </body>
 </html>
