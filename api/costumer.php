@@ -120,17 +120,32 @@ if (isset($_POST['selected']) && isset($_POST['table'])) {
         $order_ok = $ok;
         $message  = $ok ? '' : "❌ Error: " . htmlspecialchars($con->error);
 
-        // Turn "Pizza, Momo, Naan" into bill rows with prices
+        // Turn "Momo, Butter Chicken(2x)" into bill rows with prices.
+        // "Item(3x)" means the dish was selected 3 times.
         $names = explode(',', $selected);
         foreach ($names as $name) {
-            $name  = trim($name);
+            $name = trim($name);
             if ($name === '') { continue; }
 
-            $price = isset($MENU[$name]) ? $MENU[$name] : null;
-            if ($price === null) { $has_unknown = true; }
-            else                  { $total += $price; }
+            $qty     = 1;
+            $display = $name;
 
-            $bill[] = array('sn' => count($bill) + 1, 'name' => $name, 'price' => $price);
+            // Split "Item(3x)" -> Item   +   qty 3
+            if (preg_match('/^(.*?)\((\d+)x\)$/u', $name, $m)) {
+                $display = trim($m[1]);
+                $qty     = max(1, (int)$m[2]);
+            }
+
+            $price = isset($MENU[$display]) ? $MENU[$display] : null;
+            if ($price === null) { $has_unknown = true; }
+            else {
+                $price  = $price * $qty;   // line total = unit price x quantity
+                $total += $price;          // running order total
+            }
+
+            $label = $qty > 1 ? $display . ' ×' . $qty : $display;
+
+            $bill[] = array('sn' => count($bill) + 1, 'name' => $label, 'price' => $price);
         }
     } else {
         $message = "⚠️ No order data received.";

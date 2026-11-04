@@ -143,20 +143,24 @@ section .sub { display:block; text-align:center; color:#9a8f8a; font-size:12.5px
   background:#fdeee0; border:1px solid #f8cfae; border-radius:999px; padding:1.5px 8px;
   margin-left:6px; vertical-align:middle;
 }
-/* ---- Add control (checkbox kept, styled nicer) ---- */
-.pick-row{ display:flex; align-items:center; justify-content:space-between; margin-top:auto; }
-label.pick{
-  display:inline-flex; align-items:center; gap:8px; margin-left:auto;
-  font-size:13px; font-weight:700; color:var(--brand);
-  border:1.5px solid var(--brand); border-radius:999px; padding:6px 14px 6px 11px;
-  cursor:pointer; transition:0.2s; user-select:none;
+/* ---- Add control: − / qty / + stepper (order the same dish multiple times) ---- */
+.pick-row{ display:flex; align-items:center; justify-content:flex-end; margin-top:auto; }
+.qty-ctl{
+  display:inline-flex; align-items:center; font-size:13px; font-weight:700;
+  color:var(--brand); border:1.5px solid var(--brand); border-radius:999px;
+  background:#fff; user-select:none; transition:0.2s;
 }
-label.pick:hover{ background:#fff2ed; }
-label.pick input.add{
-  width:17px; height:17px; margin:0; accent-color:var(--brand); cursor:pointer;
+.qty-ctl button{
+  border:none; background:none; font-family:inherit; color:inherit; cursor:pointer;
+  font-size:13.5px; font-weight:800; padding:6px 11px; line-height:1; transition:0.2s;
 }
-label.pick:has(input.add:checked){ background:var(--brand); color:#fff; box-shadow:0 4px 12px rgba(255,99,71,.4); }
-label.pick:has(input.add:checked)::before{ content:'✓ '; }
+.qty-ctl button:hover{ background:#fff2ed; }
+.qty-ctl .qty-num{ min-width:16px; text-align:center; }
+.qty-ctl.has-item{ background:var(--brand); color:#fff; box-shadow:0 4px 12px rgba(255,99,71,.4); }
+.qty-ctl.has-item button:hover{ background:rgba(255,255,255,.18); }
+.qty-ctl.is-empty .minus{ display:none; }
+.qty-ctl.is-empty .qty-num{ display:none; }
+.qty-ctl.is-empty .plus{ padding:6px 14px; }
 
 /* ---------- Order section ---------- */
 .order-section{
@@ -725,18 +729,20 @@ window.addEventListener('scroll', () => {
   hero.style.opacity = 1 - window.scrollY/220;
 });
 
-// Cart counter + selected items builder
-const checkboxes  = document.querySelectorAll('input.add');
-const cartCount   = document.getElementById('cart-count');
-const selectedItems = document.getElementById('selectedItems');
-const indicator   = document.querySelector('.indicator');
-const cta         = document.getElementById('orderCta');
+// Cart state + quantity steppers (each dish can be added multiple times)
+const cart           = new Map();   // dish name -> quantity
+const cartCount      = document.getElementById('cart-count');
+const selectedItems  = document.getElementById('selectedItems');
+const indicator      = document.querySelector('.indicator');
+const cta            = document.getElementById('orderCta');
 
-function applySelection(){
+// Rebuild the "Selected Items" text and counters from the cart
+function refreshOrder(){
   const picked = [];
   let count = 0;
-  checkboxes.forEach(box => {
-    if (box.checked){ count++; picked.push(box.dataset.name); }
+  cart.forEach((qty, name) => {
+    count += qty;
+    picked.push(name + '(' + qty + 'x)');   // e.g. "Butter Chicken(2x)"
   });
   cartCount.textContent = count;
   selectedItems.value = picked.join(', ');
@@ -745,7 +751,48 @@ function applySelection(){
     ? '🛒 ' + count + ' item' + (count > 1 ? 's' : '') + ' selected — Tap to Order ⬆'
     : '🛒 0 items selected — Tap to Order ⬆';
 }
-checkboxes.forEach(box => box.addEventListener('change', applySelection));
+
+// Turn every "Add" checkbox into a − / qty / + stepper
+document.querySelectorAll('.pick-row').forEach(function (row) {
+  const box = row.querySelector('input.add');
+  if (!box) return;
+  const name = box.dataset.name;
+
+  const ctl = document.createElement('div');
+  ctl.className = 'qty-ctl is-empty';
+
+  const minus = document.createElement('button');
+  minus.type = 'button'; minus.className = 'minus'; minus.textContent = '−';
+  minus.setAttribute('aria-label', 'Remove one');
+
+  const num = document.createElement('span');
+  num.className = 'qty-num';
+
+  const plus = document.createElement('button');
+  plus.type = 'button'; plus.className = 'plus';
+  plus.setAttribute('aria-label', 'Add one');
+
+  ctl.append(minus, num, plus);
+  box.closest('label').replaceWith(ctl);   // checkbox is only used to read the dish name
+
+  function paint(){
+    const q = cart.get(name) || 0;
+    num.textContent = q;
+    ctl.classList.toggle('is-empty', q === 0);
+    ctl.classList.toggle('has-item', q > 0);
+    plus.textContent = q === 0 ? '＋ Add' : '+';
+  }
+  function change(d){
+    const q = (cart.get(name) || 0) + d;
+    if (q <= 0) cart.delete(name); else cart.set(name, q);
+    paint();
+    refreshOrder();
+  }
+
+  plus .addEventListener('click', () => change(+1));
+  minus.addEventListener('click', () => change(-1));
+  paint();
+});
 
 // Cart icon / bottom CTA scroll to the order form
 const orderView = document.querySelector('.order-section');
@@ -773,19 +820,8 @@ document.querySelectorAll('section[id]').forEach(sec => {
   obs.observe(sec);
 });
 
-// Search filter: hides non-matching dishes (and empty sections), shows all again on clear
-const searchBox = document.getElementById('menuSearch');
-searchBox.addEventListener('input', () => {
-  const q = searchBox.value.trim().toLowerCase();
-  document.querySelectorAll('.food-item').forEach(card => {
-    const name = card.querySelector('h3').textContent.toLowerCase();
-    card.style.display = (!q || name.includes(q)) ? '' : 'none';
-  });
-  document.querySelectorAll('section[id]').forEach(sec => {
-    const visible = [...sec.querySelectorAll('.food-item')].some(c => c.style.display !== 'none');
-    sec.style.display = visible ? '' : 'none';
-  });
-});
+// (Search filter moved to the bottom script —
+//  it now runs together with the Veg / Non-Veg filter)
 
 // QR support: costumer.html?table=5 fills and locks the table number
 const tableInput = document.getElementById('customerName');
@@ -807,31 +843,43 @@ document.querySelector('form').addEventListener('submit', (e) => {
 </script>
 
 <script>
-// ===== All / Non-Veg toggle switch (simple JS) =====
-function applyVegFilter(showAll) {
-  const items = document.querySelectorAll('.food-item');
+// ===== Veg / Non-Veg toggle + search filter (one combined function) =====
+const vegSwitch = document.getElementById('vegSwitch');
+const searchBox = document.getElementById('menuSearch');
+let vegMode = 'all';   // 'all' or 'non-veg'
 
-  items.forEach(function (item) {
-    // An item is VEG if it has the green .veg-tag badge inside it
-    const isVeg = item.querySelector('.veg-tag') !== null;
+function applyFilters(){
+  const q = searchBox.value.trim().toLowerCase();
 
-    if (showAll || !isVeg) {
-      // show it (All mode, or it is already non-veg)
-      item.style.display = 'block';
-    } else {
-      // hide veg items in Non-Veg mode
-      item.style.display = 'none';
-    }
+  document.querySelectorAll('.food-item').forEach(function (card) {
+    // A dish is VEG when it carries the green .veg-tag badge; everything else is non-veg
+    const isVeg = card.querySelector('.veg-tag') !== null;
+    const name  = card.querySelector('h3').textContent.toLowerCase();
+
+    const hideForVeg    = (vegMode === 'non-veg' && isVeg);   // Non-Veg mode → only non-veg dishes show
+    const hideForSearch = (q !== '' && !name.includes(q));
+
+    // '' (empty) restores the real layout — never set 'block' on .food-item
+    card.style.display = (hideForVeg || hideForSearch) ? 'none' : '';
+  });
+
+  document.querySelectorAll('section[id]').forEach(function (sec) {
+    const visible = [...sec.querySelectorAll('.food-item')].some(c => c.style.display !== 'none');
+    sec.style.display = visible ? '' : 'none';
   });
 }
 
+// Toggle buttons
 document.querySelectorAll('#vegSwitch .sw-btn').forEach(function (btn) {
   btn.addEventListener('click', function () {
-    const mode = btn.dataset.mode;
-    vegSwitch.dataset.active = mode;          // slides the colored indicator
-    applyVegFilter(mode === 'all');
+    vegMode = btn.dataset.mode;
+    vegSwitch.dataset.active = vegMode;   // slides the colored indicator
+    applyFilters();
   });
 });
+
+// Search box works together with the Non-Veg filter
+searchBox.addEventListener('input', applyFilters);
 </script>
 </body>
 </html>
