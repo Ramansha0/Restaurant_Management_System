@@ -1,31 +1,29 @@
 <?php
 /* ============================================================
-   WAITER DASHBOARD - live orders screen
+   WAITER DASHBOARD - live orders screen (v3, clean ops style)
    ------------------------------------------------------------
-   What is standard/professional about this version:
-   - Safe PREPARED statements for the Serve / Pending actions
-   - Stat cards at the top (Live / Pending / Needs attention)
-   - Status badge + item chips on every order card
-   - Smart sorting: new orders first, oldest waiting at top
-   - Serve click asks for confirmation (it clears the order!)
-   - AJAX live refresh every 5s -> NO page flashing anymore.
-     (works without JavaScript too, via <noscript> fallback)
+   - Safe PREPARED statements for Serve / Pending actions
+   - Stat cards: Live / Pending / Needs attention
+   - Smart sorting: new orders first, oldest waiting on top
+   - Serve asks for confirmation (it clears the order!)
+   - AJAX refresh every 5s using a DOM DIFF:
+       * existing cards are updated in place (NO re-animation,
+         no flashing) - only genuinely new cards animate
+       * served orders fade out
+     Works without JavaScript too (<noscript> refresh).
    ============================================================ */
 include 'config.php';
 
-/* ---------- status -> badge text / class ----------
-   'Pending' = waiter pressed the Pending button
-   ''        = fresh customer order (New), anything else keeps its text */
+/* ---------- status -> label / badge class / state ---------- */
 function status_info($status) {
     $s = strtolower(trim((string)$status));
-    if ($s === 'pending') return array('⏳ Pending',  'badge-pending', 'pending');
-    if ($s === 'serving') return array('🍽️ Serving', 'badge-serving', 'serving');
-    if ($s === '')        return array('🔔 New',     'badge-new',     'new');
-    return array('🔔 ' . ucfirst($s), 'badge-new', 'new');
+    if ($s === 'pending') return array('Pending', 'badge-pending', 'pending');
+    if ($s === 'serving') return array('Serving', 'badge-serving', 'serving');
+    if ($s === '')        return array('New',     'badge-new',     'new');
+    return array(ucfirst($s), 'badge-new', 'new');
 }
 
-/* ---------- Items text -> pretty chips ----------
-   Same "(2x)" format used by costumer.php: "Jhol Momo, Butter Chicken(2x)" */
+/* ---------- Items text -> chips (costumer.php "(2x)" format) ---------- */
 function item_chips_html($items_text) {
     $parts = explode(',', (string)$items_text);
     $out   = '';
@@ -40,39 +38,42 @@ function item_chips_html($items_text) {
         }
         $count++;
         $out .= '<span class="chip">' . htmlspecialchars($one)
-              . ($qty > 1 ? ' <b>×' . $qty . '</b>' : '') . '</span>';
+              . ($qty > 1 ? '<span class="qty">×' . $qty . '</span>' : '') . '</span>';
     }
-    return $count ? $out : '<span class="chip muted">no item details</span>';
+    return $count ? $out : '<span class="chip muted">No items</span>';
 }
 
-/* ---------- render all order cards (used by page AND by AJAX) ---------- */
+/* ---------- render cards (initial server render; JS repaints in place) ---------- */
 function cards_html(array $rows) {
     if (!$rows) {
-        return '<div class="empty"><div class="empty-ico">🎉</div>'
-             . '<h3>All caught up!</h3>'
-             . '<p>No live orders right now. New customer orders will appear here automatically.</p></div>';
+        return '<div class="empty"><div class="empty-ico">'
+             . '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>'
+             . '</div><h3>No live orders</h3>'
+             . '<p>New customer orders will appear here automatically.</p></div>';
     }
     $html = '';
     foreach ($rows as $row) {
-        $badge = status_info($row['status'] ?? '');
-        $html .= '<div class="order-card state-' . $badge[2] . '">';
-        $html .=   '<div class="card-top">'
-                 .   '<div class="order-id">Order #' . (int)$row['ID'] . '</div>'
-                 .   '<span class="badge ' . $badge[1] . '">' . $badge[0] . '</span>'
-                 . '</div>';
-        $html .=   '<div class="order-table">🪑 Table <b>' . htmlspecialchars($row['Table']) . '</b></div>';
-        $html .=   '<div class="chips">' . item_chips_html($row['Items'] ?? '') . '</div>';
-        $html .=   '<form method="POST" class="card-actions">'
-                 .   '<input type="hidden" name="ID" value="' . (int)$row['ID'] . '">'
-                 .   '<button type="submit" name="serve"   class="btn">✔ Serve</button>'
-                 .   '<button type="submit" name="pending" class="btn2">⏳ Pending</button>'
-                 . '</form>';
-        $html .= '</div>';
+        $badge = status_info($row['status']);
+        $html .= '<div class="order-card state-' . $badge[2] . '" data-id="' . (int)$row['id'] . '">'
+               .   '<div class="oc-head">'
+               .     '<div class="oc-ident">'
+               .       '<div class="oc-table">Table <b>' . htmlspecialchars($row['table']) . '</b></div>'
+               .       '<div class="oc-id">Order #' . (int)$row['id'] . '</div>'
+               .     '</div>'
+               .     '<span class="badge ' . $badge[1] . '"><span class="bdot"></span>' . htmlspecialchars($badge[0]) . '</span>'
+               .   '</div>'
+               .   '<div class="chips">' . item_chips_html($row['items']) . '</div>'
+               .   '<form method="POST" class="card-actions">'
+               .     '<input type="hidden" name="ID" value="' . (int)$row['id'] . '">'
+               .     '<button type="submit" name="serve" class="btn">Serve</button>'
+               .     '<button type="submit" name="pending" class="btn2">Pending</button>'
+               .   '</form>'
+               . '</div>';
     }
     return $html;
 }
 
-/* ---------- one data load = rows + stats + html, reused everywhere ---------- */
+/* ---------- one data load = rows + stats (page + AJAX share this) ---------- */
 function load_orders($con) {
     $rows = array();
     // `Table` in backticks (reserved word). Sort: fresh first, then Pending; oldest on top.
@@ -80,17 +81,24 @@ function load_orders($con) {
             ORDER BY CASE WHEN LOWER(status) = 'pending' THEN 1 ELSE 0 END ASC, ID ASC";
     $result = $con->query($sql);
     if ($result) {
-        while ($r = $result->fetch_assoc()) { $rows[] = $r; }
+        while ($r = $result->fetch_assoc()) {
+            $rows[] = array(
+                'id'     => (int)$r['ID'],
+                'table'  => (string)$r['Table'],
+                'items'  => (string)($r['Items'] ?? ''),
+                'status' => (string)($r['status'] ?? ''),
+            );
+        }
         $result->free();
     }
 
     $stats = array('total' => count($rows), 'pending' => 0, 'new' => 0);
     foreach ($rows as $r) {
-        $s = strtolower(trim((string)($r['status'] ?? '')));
-        if ($s === 'pending') { $stats['pending']++; } else { $stats['new']++; }
+        if (strtolower(trim($r['status'])) === 'pending') { $stats['pending']++; }
+        else { $stats['new']++; }
     }
 
-    return array('ok' => (bool)$result, 'stats' => $stats, 'html' => cards_html($rows));
+    return array('ok' => (bool)$result, 'stats' => $stats, 'rows' => $rows);
 }
 
 /* ============================================================
@@ -115,13 +123,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->close();
     }
 
-    // Post/Redirect/Get: browser forgets the form, no "resend?" popups on refresh
+    // Post/Redirect/Get: no "resend form?" popup on refresh
     $con->close();
     header('Location: ' . $_SERVER['REQUEST_URI']);
     exit;
 }
 
-/* --- AJAX endpoint: returns the fresh cards + stats as JSON --- */
+/* --- AJAX endpoint: rows + stats as JSON (client diffs the DOM) --- */
 if (($_GET['ajax'] ?? '') === 'view') {
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode(load_orders($con), JSON_UNESCAPED_UNICODE);
@@ -142,163 +150,213 @@ $con->close();
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E%F0%9F%8D%B4%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <noscript><meta http-equiv="refresh" content="15"></noscript>
 <style>
   :root{
-    --brand:#ff6347; --brand-dark:#e55336; --brand-soft:#fff0eb;
-    --good:#1e9e46; --good-soft:#e6f7ec; --good-line:#bfe8cd;
-    --amber:#b45309; --amber-soft:#fdf1dd; --amber-line:#fcdca8;
-    --red:#c0392b; --red-soft:#fdeaea;
-    --ink:#3a2c28; --muted:#9a8f8a; --paper:#fff8f5; --line:#ffe0d6;
+    --bg:#f6f7f9; --card:#fff; --line:#e5e7eb; --line2:#eef0f2;
+    --ink:#111827; --ink2:#374151; --muted:#6b7280; --faint:#9ca3af;
+    --brand:#ff6347; --brand-dark:#e8563a; --brand-soft:#fff0eb;
+    --blue:#1d4ed8; --blue-db:#2563eb; --blue-dot:#3b82f6; --blue-soft:#eff6ff;
+    --amber:#92400e; --amber-dot:#f59e0b; --amber-soft:#fef3c7;
+    --green:#15803d; --green-dot:#22c55e; --green-soft:#dcfce7;
+    --side:#0f172a; --side-ink:#94a3b8;
   }
-  *{ margin:0; padding:0; box-sizing:border-box; font-family:'Poppins','Segoe UI',Tahoma,sans-serif; }
-  body{ background:var(--paper); color:var(--ink); }
+  *{ margin:0; padding:0; box-sizing:border-box; font-family:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; }
+  body{ background:var(--bg); color:var(--ink); min-height:100vh; }
+  a{ text-decoration:none; }
+  button{ font-family:inherit; }
+  a:focus-visible, button:focus-visible{ outline:2px solid var(--brand-db,#e8563a); outline-offset:2px; border-radius:8px; }
 
-  /* ---------- Sticky header ---------- */
+  /* ---------- Top bar ---------- */
   header{
-    position:sticky; top:0; z-index:600;
-    background:linear-gradient(120deg,var(--brand),var(--brand-dark)); color:#fff;
-    padding:13px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px;
-    box-shadow:0 6px 20px rgba(255,99,71,.35);
+    position:sticky; top:0; z-index:700; background:var(--card);
+    height:60px; padding:0 18px; display:flex; align-items:center; justify-content:space-between; gap:12px;
+    border-bottom:1px solid var(--line);
   }
-  .brand{ display:flex; align-items:center; gap:12px; }
-  .brand .logo{ width:42px; height:42px; background:rgba(255,255,255,.18); border-radius:12px;
-                display:grid; place-items:center; font-size:22px; }
-  .brand h1{ font-size:19px; font-weight:700; line-height:1.15; }
-  .brand p{ font-size:11px; opacity:.85; }
+  .brand{ display:flex; align-items:center; gap:11px; min-width:0; }
+  .brand .logo{
+    width:34px; height:34px; border-radius:9px; background:var(--brand-soft);
+    display:grid; place-items:center; color:var(--brand-dark); flex:0 0 auto;
+  }
+  .brand h1{ font-size:15px; font-weight:600; letter-spacing:-.1px; white-space:nowrap; }
+  .brand p{ font-size:11.5px; color:var(--muted); margin-top:1px; white-space:nowrap; }
   .head-right{ display:flex; align-items:center; gap:9px; }
   .live-pill{
-    display:flex; align-items:center; gap:7px; background:rgba(255,255,255,.16);
-    border:1px solid rgba(255,255,255,.35); padding:6px 12px; border-radius:999px;
-    font-size:11.5px; font-weight:600; white-space:nowrap;
+    display:flex; align-items:center; gap:7px; background:var(--card);
+    border:1px solid var(--line); padding:6px 11px; border-radius:999px;
+    font-size:11.5px; font-weight:500; color:var(--muted); white-space:nowrap;
   }
-  .live-pill .dot{ width:8px; height:8px; border-radius:50%; background:#6cf07f; animation:pulse 1.6s infinite; }
-  @keyframes pulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(108,240,127,.5); } 50%{ box-shadow:0 0 0 6px rgba(108,240,127,0); } }
-  .live-pill.offline{ background:#b91c1c; }
-  .live-pill.offline .dot{ background:#fca5a5; animation:none; }
+  .live-pill .dot{ width:7px; height:7px; border-radius:50%; background:#22c55e; animation:pulse 2s infinite; }
+  @keyframes pulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(34,197,94,.4); } 50%{ box-shadow:0 0 0 5px rgba(34,197,94,0); } }
+  .live-pill.offline .dot{ background:#ef4444; animation:none; }
+  .live-pill.offline{ color:#b91c1c; border-color:#fecaca; }
   .icon-btn{
-    background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.35); color:#fff;
-    width:34px; height:34px; border-radius:10px; font-size:16px; cursor:pointer; transition:.2s;
+    background:var(--card); border:1px solid var(--line); color:var(--ink2);
+    width:32px; height:32px; border-radius:8px; display:grid; place-items:center;
+    cursor:pointer; transition:.15s;
   }
-  .icon-btn:hover{ background:rgba(255,255,255,.3); }
-  .hamburger{ display:none; font-size:22px; cursor:pointer; user-select:none; }
+  .icon-btn:hover{ background:var(--line2); }
+  .hamburger{ display:none; flex-direction:column; gap:4px; cursor:pointer; padding:8px; border-radius:8px; }
+  .hamburger span{ width:16px; height:2px; background:var(--ink2); border-radius:2px; display:block; transition:.25s; }
+  .hamburger.open span:nth-child(1){ transform:translateY(6px) rotate(45deg); }
+  .hamburger.open span:nth-child(2){ opacity:0; }
+  .hamburger.open span:nth-child(3){ transform:translateY(-6px) rotate(-45deg); }
 
   /* ---------- Layout ---------- */
-  .container{ display:grid; grid-template-columns:200px 1fr; min-height:calc(100vh - 74px); }
+  .container{ display:grid; grid-template-columns:222px minmax(0,1fr); min-height:calc(100vh - 60px); }
 
-  .sidebar{ background:#fff0eb; border-right:2px solid var(--brand); padding:18px 10px; }
-  .sidebar h2{ color:var(--brand); font-size:13px; margin-bottom:14px; letter-spacing:1.2px; text-transform:uppercase; }
-  .sidebar ul{ list-style:none; }
-  .sidebar li{ margin:8px 0; }
-  .sidebar a{
-    text-decoration:none; color:var(--ink); font-weight:500; font-size:14px;
-    padding:9px 12px; display:flex; gap:9px; border-radius:8px; transition:.2s;
+  .sidebar{
+    background:var(--side); color:var(--side-ink);
+    display:flex; flex-direction:column;
+    position:sticky; top:60px; height:calc(100vh - 60px); overflow:auto;
   }
-  .sidebar a:hover{ background:var(--brand); color:#fff; }
-  .sidebar a.active{ background:var(--brand); color:#fff; font-weight:600; box-shadow:0 4px 12px rgba(255,99,71,.35); }
+  .side-brand{
+    display:flex; align-items:center; gap:10px;
+    padding:16px 16px 14px; border-bottom:1px solid rgba(255,255,255,.07);
+    color:#e2e8f0; font-size:12.5px; font-weight:600;
+  }
+  .side-logo{ color:var(--brand); display:grid; place-items:center; }
+  .side-label{
+    padding:16px 16px 8px; font-size:10.5px; font-weight:600; letter-spacing:1px;
+    text-transform:uppercase; color:#64748b;
+  }
+  .sidebar nav{ padding:0 10px; }
+  .sidebar nav a{
+    display:flex; align-items:center; gap:10px; padding:9px 10px; margin:2px 0;
+    border-radius:8px; font-size:13.5px; font-weight:500; color:var(--side-ink);
+    border-left:2px solid transparent; transition:.15s;
+  }
+  .sidebar nav a svg{ flex:0 0 auto; opacity:.85; }
+  .sidebar nav a:hover{ color:#e2e8f0; background:rgba(255,255,255,.05); }
+  .sidebar nav a.active{
+    color:#fff; background:rgba(255,255,255,.07); border-left-color:var(--brand); font-weight:600;
+  }
+  .side-count{
+    margin-left:auto; min-width:20px; height:20px; padding:0 6px; border-radius:999px;
+    background:rgba(255,255,255,.08); color:#e2e8f0; font-size:11px; font-weight:600;
+    display:grid; place-items:center;
+  }
+  .side-foot{ margin-top:auto; padding:14px 16px; font-size:10.5px; color:#64748b; border-top:1px solid rgba(255,255,255,.07); }
 
-  .main{ padding:22px; }
+  .main{ padding:22px 24px; }
+  .page{ max-width:1200px; margin:0 auto; }
 
-  /* ---------- Stats row ---------- */
-  .section-title{ font-size:20px; font-weight:700; color:var(--brand); display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
-  .section-sub{ font-size:12px; color:var(--muted); font-weight:500; }
-
-  .stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px; }
+  /* ---------- Stats ---------- */
+  .stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:22px; }
   .stat{
-    background:#fff; border:1.5px solid var(--line); border-radius:14px; padding:14px;
-    display:flex; align-items:center; gap:12px; box-shadow:0 6px 18px rgba(255,99,71,.08);
+    background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px;
+    display:flex; align-items:center; gap:13px;
   }
-  .s-ico{ width:42px; height:42px; border-radius:12px; display:grid; place-items:center; font-size:19px; }
-  .stat.total   .s-ico{ background:var(--brand-soft); }  .stat.total   .s-num{ color:var(--brand); }
-  .stat.pending .s-ico{ background:var(--amber-soft); }  .stat.pending .s-num{ color:#d97706; }
-  .stat.new     .s-ico{ background:var(--red-soft); }    .stat.new     .s-num{ color:#e11d48; }
-  .s-num{ font-size:25px; font-weight:800; line-height:1; }
-  .s-label{ font-size:11.5px; color:var(--muted); font-weight:600; margin-top:3px; }
-  .s-num.pop{ animation:pop .35s ease; }
-  @keyframes pop{ 0%{ transform:scale(1); } 40%{ transform:scale(1.35); } 100%{ transform:scale(1); } }
+  .s-ico{ width:38px; height:38px; border-radius:9px; display:grid; place-items:center; flex:0 0 auto; }
+  .stat.total   .s-ico{ background:var(--brand-soft); color:var(--brand-dark); }
+  .stat.pending .s-ico{ background:var(--amber-soft); color:var(--amber-dot); }
+  .stat.new     .s-ico{ background:var(--blue-soft);  color:var(--blue-db); }
+  .s-label{ font-size:10.5px; font-weight:600; letter-spacing:.5px; text-transform:uppercase; color:var(--muted); }
+  .s-num{ font-size:22px; font-weight:700; letter-spacing:-.3px; margin-top:2px; font-variant-numeric:tabular-nums; }
+  .s-num.pop{ animation:pop .3s ease; }
+  @keyframes pop{ 0%{ transform:scale(1); } 45%{ transform:scale(1.14); } 100%{ transform:scale(1); } }
+
+  /* ---------- Section title ---------- */
+  .section-title{ display:flex; align-items:baseline; gap:10px; margin-bottom:14px; }
+  .section-title h2{ font-size:15.5px; font-weight:600; }
+  .section-sub{ font-size:12px; color:var(--muted); }
 
   /* ---------- Order cards ---------- */
-  .orders{ display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); }
+  .orders{ display:grid; gap:14px; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); }
   .order-card{
-    background:#fff; border:1.5px solid #f4e3dc; border-left-width:5px; border-radius:14px;
-    padding:14px 14px 12px; display:flex; flex-direction:column; gap:10px;
-    box-shadow:0 8px 22px rgba(63,42,32,.08);
-    animation:fadeUp .4s ease both; transition:transform .2s, box-shadow .2s;
+    background:var(--card); border:1px solid var(--line); border-left:3px solid var(--faint);
+    border-radius:12px; padding:15px 16px 13px; display:flex; flex-direction:column;
+    transition:transform .15s, box-shadow .15s, opacity .25s;
   }
-  @keyframes fadeUp{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:none; } }
-  .order-card:hover{ transform:translateY(-3px); box-shadow:0 12px 26px rgba(63,42,32,.14); }
-  .order-card.state-new{     border-left-color:var(--brand); }
-  .order-card.state-pending{ border-left-color:#d97706; background:#fffdf6; }
-  .order-card.state-serving{ border-left-color:var(--good); background:#fbfffc; }
+  .order-card:hover{ transform:translateY(-1px); box-shadow:0 4px 14px rgba(15,23,42,.07); }
+  .state-new     { border-left-color:var(--blue-dot); }
+  .state-pending { border-left-color:var(--amber-dot); }
+  .state-serving { border-left-color:var(--green-dot); }
+  .order-card.entering{ animation:enter .3s ease; }
+  @keyframes enter{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:none; } }
+  .order-card.leaving{ opacity:0; transform:scale(.98); }
 
-  .card-top{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
-  .order-id{ font-size:14.5px; font-weight:700; color:var(--brand); }
-  .badge{ font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; white-space:nowrap; }
-  .badge-new{     background:var(--red-soft);    color:var(--red); }
-  .badge-pending{ background:var(--amber-soft);  color:var(--amber); }
-  .badge-serving{ background:var(--good-soft);   color:var(--good); }
+  .oc-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+  .oc-table{ font-size:15px; font-weight:600; }
+  .oc-table b{ font-weight:700; }
+  .oc-id{ font-size:11.5px; color:var(--faint); margin-top:2px; font-variant-numeric:tabular-nums; }
 
-  .order-table{ font-size:15.5px; font-weight:600; }
-  .order-table b{ font-size:17px; color:var(--brand-dark); }
+  .badge{
+    display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:999px;
+    font-size:11.5px; font-weight:600; white-space:nowrap; flex:0 0 auto;
+  }
+  .badge .bdot{ width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.55; }
+  .badge-new{ background:var(--blue-soft); color:var(--blue); }
+  .badge-pending{ background:var(--amber-soft); color:var(--amber); }
+  .badge-serving{ background:var(--green-soft); color:var(--green); }
 
-  .chips{ display:flex; flex-wrap:wrap; gap:6px; }
+  .chips{ display:flex; flex-wrap:wrap; gap:6px; margin-top:11px; }
   .chip{
-    background:#fff7f3; border:1.5px solid var(--line); color:#8a5a4e;
-    border-radius:999px; padding:5px 11px; font-size:12px; font-weight:600;
+    background:#f4f5f7; border:1px solid var(--line2); color:var(--ink2);
+    border-radius:7px; padding:4px 9px; font-size:12px; font-weight:500;
   }
-  .chip b{ color:var(--brand-dark); }
-  .chip.muted{ opacity:.7; font-style:italic; font-weight:500; }
+  .chip .qty{ color:var(--muted); font-weight:600; margin-left:4px; }
+  .chip.muted{ color:var(--faint); font-style:italic; font-weight:400; border-style:dashed; }
 
-  .card-actions{ display:flex; gap:8px; margin-top:auto; padding-top:6px; }
+  .card-actions{ display:flex; gap:8px; margin-top:auto; padding-top:13px; }
   .btn{
-    flex:1; padding:9px 0; border:none; border-radius:10px; cursor:pointer;
-    background:linear-gradient(120deg,var(--brand),var(--brand-dark)); color:#fff;
-    font-weight:700; font-size:13.5px; transition:.2s; box-shadow:0 4px 10px rgba(255,99,71,.3);
+    flex:1; height:36px; border:none; border-radius:8px; cursor:pointer;
+    background:var(--brand); color:#fff; font-weight:600; font-size:13px; transition:.15s;
   }
-  .btn:hover{ transform:translateY(-2px); box-shadow:0 6px 14px rgba(255,99,71,.4); }
+  .btn:hover{ background:var(--brand-dark); }
   .btn2{
-    flex:1; padding:9px 0; border-radius:10px; cursor:pointer; transition:.2s;
-    background:var(--good-soft); border:1.5px solid var(--good-line); color:var(--good);
-    font-weight:700; font-size:13.5px;
+    flex:1; height:36px; border-radius:8px; cursor:pointer; transition:.15s;
+    background:var(--card); border:1px solid #d1d5db; color:var(--ink2);
+    font-weight:600; font-size:13px;
   }
-  .btn2:hover{ background:var(--good); color:#fff; }
-  button:disabled{ opacity:.6; cursor:wait; }
+  .btn2:hover{ background:#f9fafb; border-color:var(--faint); }
+  button:disabled{ opacity:.55; cursor:wait; }
 
-  /* ---------- Friendly empty state ---------- */
-  .empty{
-    grid-column:1/-1; text-align:center; padding:46px 20px;
-    background:#fff; border:2px dashed var(--line); border-radius:18px;
+  /* ---------- Empty state ---------- */
+  .empty{ grid-column:1/-1; text-align:center; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:44px 20px; }
+  .empty-ico{ width:46px; height:46px; border-radius:50%; background:#f3f4f6; color:var(--faint); display:grid; place-items:center; margin:0 auto 10px; }
+  .empty h3{ font-size:15px; font-weight:600; color:var(--ink); }
+  .empty p{ color:var(--muted); font-size:12.5px; margin-top:4px; }
+
+  footer{
+    text-align:center; padding:16px; font-size:11.5px; color:var(--faint);
+    border-top:1px solid var(--line2); background:var(--bg);
   }
-  .empty-ico{ font-size:44px; }
-  .empty h3{ color:var(--good); margin-top:8px; font-size:19px; }
-  .empty p{ color:var(--muted); font-size:13px; margin-top:5px; }
-
-  footer{ text-align:center; padding:14px; background:var(--brand); color:#fff; font-weight:600; font-size:13px; }
 
   /* ---------- Responsive: tablets ---------- */
   @media (max-width:1024px){
-    .container{ grid-template-columns:170px 1fr; }
+    .container{ grid-template-columns:200px minmax(0,1fr); }
   }
 
   /* ---------- Responsive: mobiles ---------- */
   .overlay{ display:none; }
   @media (max-width:600px){
     .container{ grid-template-columns:1fr; }
-    .main{ padding:16px 12px; }
-    .brand h1{ font-size:15px; } .brand p{ font-size:9.5px; }
+    .main{ padding:16px 14px; }
+    .brand h1{ font-size:13.5px; } .brand p{ font-size:10px; }
     .live-pill{ font-size:10.5px; padding:5px 9px; }
-    .hamburger{ display:block; }
-    .stat{ padding:11px; gap:9px; }
-    .s-ico{ width:34px; height:34px; font-size:16px; }
-    .s-num{ font-size:20px; }
-    .s-label{ font-size:10px; }
+    .hamburger{ display:flex; }
+    .icon-btn{ display:none; }
+    .stats{ gap:9px; }
+    .stat{ padding:10px 11px; gap:9px; }
+    .s-ico{ width:32px; height:32px; border-radius:8px; }
+    .s-ico svg{ width:15px; height:15px; }
+    .s-num{ font-size:18px; }
+    .s-label{ font-size:9px; }
+    .orders{ grid-template-columns:1fr; }
     .sidebar{
-      position:fixed; top:0; left:-102%; width:74%; max-width:250px; height:100%;
-      z-index:700; transition:left .3s ease; box-shadow:8px 0 24px rgba(0,0,0,.15);
+      position:fixed; top:0; left:-104%; width:76%; max-width:250px; height:100vh;
+      z-index:800; transition:left .28s ease; box-shadow:0 0 40px rgba(0,0,0,.3);
+      height:100vh !important; top:0;
     }
     .sidebar.active{ left:0; }
-    .overlay.show{ display:block; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:650; }
+    .overlay.show{ display:block; position:fixed; inset:0; background:rgba(15,23,42,.45); z-index:750; }
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    .order-card.entering, .live-pill .dot, .s-num.pop{ animation:none !important; }
+    .order-card{ transition:none; }
   }
 </style>
 </head>
@@ -306,89 +364,219 @@ $con->close();
 
 <header>
   <div class="brand">
-    <span class="logo">🍴</span>
+    <span class="logo">
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/></svg>
+    </span>
     <div>
       <h1>Waiter Dashboard</h1>
-      <p>Raman Restaurant · Live Kitchen Screen</p>
+      <p>Raman Restaurant</p>
     </div>
   </div>
   <div class="head-right">
     <span class="live-pill" id="livePill"><span class="dot"></span><span id="liveNote">Live</span></span>
-    <button class="icon-btn" id="refreshBtn" title="Refresh now">↻</button>
-    <span class="hamburger" id="hamburger">☰</span>
+    <button class="icon-btn" id="refreshBtn" title="Refresh now" aria-label="Refresh">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v5h-5"/></svg>
+    </button>
+    <span class="hamburger" id="hamburger" role="button" aria-label="Menu"><span></span><span></span><span></span></span>
   </div>
 </header>
 
 <div class="container">
-  <aside class="sidebar">
-    <h2>Navigation</h2>
-    <ul>
-      <li><a class="active" href="/api/waiter.php">📋 Orders</a></li>
-      <li><a href="/api/history.php">⚙️ History</a></li>
-    </ul>
+  <aside class="sidebar" id="sidebar">
+    <div class="side-brand">
+      <span class="side-logo">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/></svg>
+      </span>
+      Raman Restaurant
+    </div>
+    <div class="side-label">Workspace</div>
+    <nav>
+      <a class="active" href="/api/waiter.php">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 5h12M9 12h12M9 19h12M4 5h.01M4 12h.01M4 19h.01"/></svg>
+        Orders <span class="side-count" id="sideCount"><?php echo (int)$view['stats']['total']; ?></span>
+      </a>
+      <a href="/api/history.php">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 8v4l2.5 2"/></svg>
+        History
+      </a>
+    </nav>
+    <div class="side-foot">Staff view · QR ordering system</div>
   </aside>
 
   <main class="main">
-    <div class="section-title">Live Orders <span class="section-sub">fresh orders appear automatically · oldest waiting on top</span></div>
+    <div class="page">
 
-    <div class="stats">
-      <div class="stat total">
-        <span class="s-ico">🍽️</span>
-        <div><div class="s-num" id="stTotal"><?php echo (int)$view['stats']['total']; ?></div><div class="s-label">Live Orders</div></div>
+      <div class="stats">
+        <div class="stat total">
+          <span class="s-ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 9h6M9 13h6M9 17h4"/></svg></span>
+          <div><div class="s-label">Live orders</div><div class="s-num" id="stTotal"><?php echo (int)$view['stats']['total']; ?></div></div>
+        </div>
+        <div class="stat pending">
+          <span class="s-ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 8v4l2.5 2"/></svg></span>
+          <div><div class="s-label">Pending</div><div class="s-num" id="stPending"><?php echo (int)$view['stats']['pending']; ?></div></div>
+        </div>
+        <div class="stat new">
+          <span class="s-ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span>
+          <div><div class="s-label">Needs attention</div><div class="s-num" id="stNew"><?php echo (int)$view['stats']['new']; ?></div></div>
+        </div>
       </div>
-      <div class="stat pending">
-        <span class="s-ico">⏳</span>
-        <div><div class="s-num" id="stPending"><?php echo (int)$view['stats']['pending']; ?></div><div class="s-label">Pending</div></div>
+
+      <div class="section-title">
+        <h2>Live Orders</h2>
+        <span class="section-sub">fresh first · oldest waiting on top</span>
       </div>
-      <div class="stat new">
-        <span class="s-ico">🔔</span>
-        <div><div class="s-num" id="stNew"><?php echo (int)$view['stats']['new']; ?></div><div class="s-label">Needs Attention</div></div>
-      </div>
+
+      <div class="orders" id="orderGrid"><?php echo cards_html($view['rows']); ?></div>
+
     </div>
-
-    <div class="orders" id="orderGrid"><?php echo $view['html']; ?></div>
   </main>
 </div>
 
 <div class="overlay" id="overlay"></div>
 
-<footer>© 2025 Raman Restaurant — Waiter Interface</footer>
+<footer>Raman Restaurant · Waiter interface</footer>
 
 <script>
-/* ================= Live dashboard (AJAX, no page flashing) ================= */
-const grid      = document.getElementById('orderGrid');
-const note      = document.getElementById('liveNote');
-const pill      = document.getElementById('livePill');
-const stTotal   = document.getElementById('stTotal');
-const stPending = document.getElementById('stPending');
-const stNew     = document.getElementById('stNew');
+/* ================= Helpers ================= */
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+/* Same status mapping as the PHP side */
+function statusOf(s){
+  s = String(s || '').toLowerCase().trim();
+  if (s === 'pending') return { label:'Pending', badge:'badge-pending', state:'pending' };
+  if (s === 'serving') return { label:'Serving', badge:'badge-serving', state:'serving' };
+  if (!s)              return { label:'New',     badge:'badge-new',     state:'new' };
+  return { label: s.charAt(0).toUpperCase() + s.slice(1), badge:'badge-new', state:'new' };
+}
+
+/* Same "(2x)" parsing as the PHP side */
+function chipsHtml(items){
+  const out = [];
+  let count = 0;
+  String(items || '').split(',').forEach(part => {
+    part = part.trim();
+    if (!part) return;
+    let name = part, qty = 0;
+    const m = part.match(/^(.*?)\((\d+)x\)$/u);
+    if (m) { name = m[1].trim(); qty = Math.max(1, parseInt(m[2], 10)); }
+    count++;
+    out.push('<span class="chip">' + esc(name) + (qty > 1 ? '<span class="qty">×' + qty + '</span>' : '') + '</span>');
+  });
+  return count ? out.join('') : '<span class="chip muted">No items</span>';
+}
+
+/* ================= Card DOM ================= */
+const grid = document.getElementById('orderGrid');
+
+function buildCard(row){
+  const st = statusOf(row.status);
+  const el = document.createElement('div');
+  el.className = 'order-card state-' + st.state + ' entering';
+  el.dataset.id = row.id;
+  el.innerHTML =
+    '<div class="oc-head">' +
+      '<div class="oc-ident">' +
+        '<div class="oc-table">Table <b>' + esc(row.table) + '</b></div>' +
+        '<div class="oc-id">Order #' + row.id + '</div>' +
+      '</div>' +
+      '<span class="badge ' + st.badge + '"><span class="bdot"></span>' + esc(st.label) + '</span>' +
+    '</div>' +
+    '<div class="chips">' + chipsHtml(row.items) + '</div>' +
+    '<form method="POST" class="card-actions">' +
+      '<input type="hidden" name="ID" value="' + row.id + '">' +
+      '<button type="submit" name="serve" class="btn">Serve</button>' +
+      '<button type="submit" name="pending" class="btn2">Pending</button>' +
+    '</form>';
+  el.addEventListener('animationend', () => el.classList.remove('entering'), { once:true });
+  return el;
+}
+
+/* Update an existing card in place - no re-animation */
+function paintCard(el, row){
+  const st = statusOf(row.status);
+  el.dataset.id = row.id;
+  el.classList.remove('state-new', 'state-pending', 'state-serving');
+  el.classList.add('state-' + st.state);
+  el.querySelector('.oc-table b').textContent = row.table;
+  el.querySelector('.oc-id').textContent = 'Order #' + row.id;
+  const badge = el.querySelector('.badge');
+  badge.className = 'badge ' + st.badge;
+  badge.textContent = '';
+  const dot = document.createElement('span'); dot.className = 'bdot';
+  badge.append(dot, document.createTextNode(st.label));
+  el.querySelector('.chips').innerHTML = chipsHtml(row.items);
+  const f = el.querySelector('input[name=ID]'); if (f) f.value = row.id;
+}
+
+/* ================= The anti-flash diff =================
+   Only NEW cards animate. Changed cards are updated in
+   place. Served orders fade out. Order is mirrored.      */
+function reconcile(rows){
+  const existing = new Map();
+  grid.querySelectorAll('.order-card').forEach(el => {
+    if (!el.classList.contains('leaving')) existing.set(String(el.dataset.id), el);
+  });
+
+  const keep = new Set(rows.map(r => String(r.id)));
+  existing.forEach((el, id) => {
+    if (!keep.has(id)) {
+      el.classList.remove('entering');
+      el.classList.add('leaving');
+      setTimeout(() => el.remove(), 260);
+    }
+  });
+
+  rows.forEach((row, idx) => {
+    const key = String(row.id);
+    const el = existing.get(key);
+    if (el) {
+      paintCard(el, row);
+      if (grid.children[idx] !== el) grid.insertBefore(el, grid.children[idx] || null);
+    } else {
+      const card = buildCard(row);
+      grid.insertBefore(card, grid.children[idx] || null);
+    }
+  });
+}
+
+/* ================= Stats ================= */
+const stTotal = document.getElementById('stTotal');
+const stPending = document.getElementById('stPending');
+const stNew = document.getElementById('stNew');
+
+function popNum(el, value){
+  if (!el || el.textContent === String(value)) return;
+  el.textContent = value;
+  el.classList.remove('pop');
+  void el.offsetWidth;
+  el.classList.add('pop');
+}
+function setStats(s){
+  popNum(stTotal, s.total);
+  popNum(stPending, s.pending);
+  popNum(stNew, s.new);
+  const sc = document.getElementById('sideCount');
+  if (sc) sc.textContent = s.total;
+}
+
+/* ================= Live polling ================= */
+const note = document.getElementById('liveNote');
+const pill = document.getElementById('livePill');
 let lastSync = Date.now();
 
-function refreshNote() {
+function refreshNote(){
   if (pill.classList.contains('offline')) return;
   const s = Math.round((Date.now() - lastSync) / 1000);
   note.textContent = s <= 0 ? 'Updated just now' : 'Updated ' + s + 's ago';
 }
 
-function popStat(el, value) {
-  if (!el || el.textContent === String(value)) return;
-  el.textContent = value;
-  el.classList.remove('pop');
-  void el.offsetWidth;            /* restart the pop animation */
-  el.classList.add('pop');
-}
-
-/* The same PHP page answers JSON when we ask ?ajax=view */
-async function poll() {
+async function poll(){
   try {
-    const res  = await fetch(location.pathname + '?ajax=view', { cache: 'no-store' });
+    const res  = await fetch(location.pathname + '?ajax=view', { cache:'no-store' });
     const data = await res.json();
     if (data.ok) {
-      grid.innerHTML = data.html;
-      popStat(stTotal,   data.stats.total);
-      popStat(stPending, data.stats.pending);
-      popStat(stNew,     data.stats.new);
+      reconcile(data.rows);
+      setStats(data.stats);
       pill.classList.remove('offline');
       lastSync = Date.now();
       refreshNote();
@@ -405,15 +593,15 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) poll
 document.getElementById('refreshBtn').addEventListener('click', poll);
 
 /* ================= Confirm before destructive actions =================
-   Delegated on <document> so it still works after AJAX card swaps.      */
+   Delegated on document so it still works after DOM updates.            */
 document.addEventListener('submit', (e) => {
   const form = e.target;
-  if (form.dataset.busy) { e.preventDefault(); return; }   /* double-click guard */
+  if (form.dataset.busy) { e.preventDefault(); return; }       /* double-click guard */
 
   const action = e.submitter ? e.submitter.name : '';
   let msg = '';
   if (action === 'serve')   msg = 'Mark this order as SERVED?\nIt will be cleared from the live list.';
-  if (action === 'pending') msg = 'Move this order back to ⏳ Pending?';
+  if (action === 'pending') msg = 'Move this order back to Pending?';
   if (msg && !window.confirm(msg)) { e.preventDefault(); return; }
 
   form.dataset.busy = '1';
@@ -422,13 +610,13 @@ document.addEventListener('submit', (e) => {
 
 /* ================= Sidebar (mobile) ================= */
 const hamburger = document.getElementById('hamburger');
-const sidebar   = document.querySelector('.sidebar');
+const sidebar   = document.getElementById('sidebar');
 const overlay   = document.getElementById('overlay');
 
-function setMenu(open) {
+function setMenu(open){
   sidebar.classList.toggle('active', open);
   overlay.classList.toggle('show', open);
-  hamburger.textContent = open ? '✕' : '☰';
+  hamburger.classList.toggle('open', open);
 }
 hamburger.addEventListener('click', () => setMenu(!sidebar.classList.contains('active')));
 overlay.addEventListener('click', () => setMenu(false));
