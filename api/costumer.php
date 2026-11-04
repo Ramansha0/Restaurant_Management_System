@@ -177,6 +177,7 @@ $js_items  = json_encode($selected);
   <style>
     :root{
       --brand:#ff6347; --brand-dark:#e55336; --ink:#333; --line:#ffe0d6; --good:#1e9e46;
+      --esewa:#60bb46; --esewa-dark:#3f9142;
     }
     *{ margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
     body{ background:#fefcf9; color:var(--ink); min-height:100vh; }
@@ -300,6 +301,63 @@ $js_items  = json_encode($selected);
     #rateBtn:disabled{ opacity:.45; cursor:not-allowed; box-shadow:none; }
     #rateDone{ color:var(--good); font-weight:700; font-size:15px; padding:14px 0 4px; }
 
+    /* ---------- 💳 Pay via eSewa (button + QR modal) ---------- */
+    .esewa-btn{
+      margin-top:16px; width:100%; border:none; cursor:pointer;
+      background:linear-gradient(120deg,var(--esewa),var(--esewa-dark)); color:#fff;
+      padding:14px; border-radius:14px; font-size:15.5px; font-weight:700;
+      display:flex; align-items:center; justify-content:center; gap:8px;
+      box-shadow:0 8px 20px rgba(96,187,70,.35); transition:.25s;
+    }
+    .esewa-btn:hover{ transform:translateY(-2px); filter:brightness(1.05); }
+    .esewa-btn:active{ transform:scale(.98); }
+
+    /* Modal overlay — blurs the whole page behind it */
+    .pay-overlay{
+      position:fixed; inset:0; z-index:1000;
+      display:flex; align-items:center; justify-content:center; padding:18px;
+      background:rgba(60,30,20,.45);
+      -webkit-backdrop-filter:blur(10px);      /* ← the blur effect */
+      backdrop-filter:blur(10px);
+      opacity:0; pointer-events:none;          /* hidden state */
+      transition:opacity .3s ease;             /* smooth fade — .3s ease */
+    }
+    .pay-overlay.open{ opacity:1; pointer-events:auto; }
+
+    /* White modal card — pops in with scale + opacity (.3s ease) */
+    .pay-card{
+      position:relative; width:min(360px,100%);
+      background:#fff; color:var(--ink); border-radius:22px;
+      padding:26px 22px 24px; text-align:center;
+      box-shadow:0 30px 80px rgba(0,0,0,.4);
+      transform:scale(.75); opacity:0;         /* starting state */
+      transition:transform .3s ease, opacity .3s ease;
+    }
+    .pay-overlay.open .pay-card{ transform:scale(1); opacity:1; }
+
+    .pay-close{
+      position:absolute; top:12px; right:12px; width:38px; height:38px;
+      border:none; border-radius:50%; cursor:pointer;
+      background:rgba(255,99,71,.12); color:var(--brand); font-size:22px; line-height:1;
+      transition:background .15s;
+    }
+    .pay-close:hover{ background:rgba(255,99,71,.25); }
+    .pay-card h2{ color:var(--brand); font-size:20px; }
+    .pay-sub{ font-size:12.5px; color:#9a8f8a; margin-top:3px; }
+    .pay-amount{ margin-top:10px; font-size:30px; font-weight:800; color:var(--esewa-dark); }
+    .qr-wrap{
+      margin:14px auto 0; width:230px; height:230px; padding:12px;
+      border:2px solid var(--line); border-radius:18px; background:#fff;
+    }
+    .qr-img{ width:100%; height:100%; object-fit:contain; display:block; border-radius:8px; }
+    .pay-hint{ margin-top:13px; font-size:13px; color:#5a4a42; }
+    .pay-hint b{ color:var(--esewa-dark); }
+    .pay-note{ margin-top:7px; font-size:11px; color:#b9a49c; }
+
+    @media (max-width:480px){
+      .qr-wrap{ width:200px; height:200px; }
+    }
+
     /* ---------- Buttons / misc ---------- */
     .actions{ margin-top:20px; }
     .back{
@@ -410,7 +468,10 @@ $js_items  = json_encode($selected);
       <div class="bill-note">* Items marked with “—” are not on the price list; the final price will be confirmed at the counter.</div>
     <?php endif; ?>
 
-      <div class="thanks-line">🙏 Please pay at the counter or ask your waiter. Thank you &amp; visit again!</div>
+    <!-- 💳 PAYMENT — clicking this opens the eSewa QR modal -->
+    <button id="esewaBtn" class="esewa-btn">🟢 Pay via eSewa — Rs. <?php echo number_format($total); ?></button>
+
+    <div class="thanks-line">🙏 Scan the QR to pay via <b>eSewa</b> from your mobile — or ask your waiter. Thank you &amp; visit again!</div>
     </div>
 
   </div><!-- /top-grid -->
@@ -520,6 +581,61 @@ rateBtn.addEventListener('click', async () => {
     rateLabel.textContent = '⚠️ Could not save. Please try again.';
   }
 });
+</script>
+<?php endif; ?>
+
+<?php if ($order_ok): ?>
+<!-- ---------- 💳 Pay via eSewa — QR modal ---------- -->
+<div class="pay-overlay" id="payOverlay">
+  <div class="pay-card" role="dialog" aria-modal="true">
+    <button class="pay-close" id="payClose" aria-label="Close">&times;</button>
+
+    <h2>Scan to Pay via eSewa</h2>
+    <div class="pay-sub">Order #<?php echo $order_id; ?> · Table <?php echo htmlspecialchars($table); ?></div>
+    <div class="pay-amount">Rs. <?php echo number_format($total); ?></div>
+
+    <div class="qr-wrap">
+      <!-- 💳 YOUR eSewa QR — the image uploaded to this GitHub repo.
+           To change it later, just replace this src (GitHub → open image → Raw → copy URL). -->
+      <img class="qr-img" id="qrImg" alt="eSewa Payment QR"
+           src="https://raw.githubusercontent.com/Ramansha0/Restaurant_Management_System/master/raman%20qr.jpeg">
+    </div>
+
+    <div class="pay-hint">Open the <b>eSewa app</b> → <b>Scan QR</b> → enter <b>Rs. <?php echo number_format($total); ?></b> → confirm</div>
+    <div class="pay-note">Tap outside or the &times; to close</div>
+  </div>
+</div>
+
+<script>
+/* ============ QR payment modal (Pay via eSewa) ============ */
+const esewaBtn   = document.getElementById('esewaBtn');
+const payOverlay = document.getElementById('payOverlay');
+const payClose   = document.getElementById('payClose');
+
+function openPayModal(){
+  payOverlay.classList.add('open');
+  document.body.style.overflow = 'hidden';          // stop page scroll behind the modal
+}
+function closePayModal(){
+  payOverlay.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+esewaBtn.addEventListener('click', openPayModal);
+payClose.addEventListener('click', closePayModal);
+payOverlay.addEventListener('click', (e) => {       // tap the blurred background closes it
+  if (e.target === payOverlay) closePayModal();
+});
+document.addEventListener('keydown', (e) => {       // bonus: Esc key closes it too
+  if (e.key === 'Escape') closePayModal();
+});
+
+// If the QR image ever fails to load (deleted/renamed on GitHub), show a note
+document.getElementById('qrImg').onerror = function(){
+  this.onerror = null;
+  this.style.display = 'none';
+  document.querySelector('.pay-hint').innerHTML = '⚠️ QR could not load — please pay at the counter.';
+};
 </script>
 <?php endif; ?>
 
