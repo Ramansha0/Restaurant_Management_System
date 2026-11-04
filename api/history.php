@@ -1,7 +1,10 @@
 <?php
 /* ============================================================
-   ORDER HISTORY - served orders archive (v3)
+   ORDER HISTORY - served-orders archive (v3)
    ------------------------------------------------------------
+   Orders ONLY arrive here after a waiter confirms "Serve"
+   on the waiter dashboard (customer ordering does not write
+   to this table anymore), so everything listed was served.
    - Same orange & white theme as the waiter dashboard
    - AJAX refresh every 5s with the same anti-flash DOM diff:
        existing cards stay still, new served orders fade in,
@@ -55,8 +58,8 @@ function load_history($con) {
     return array('ok' => (bool)$result, 'stats' => array('total' => count($normalized), 'live' => $live), 'rows' => $normalized);
 }
 
-/* ---------- Items text -> chips (costumer.php "(2x)" format) ---------- */
-function item_chips_html($items_text) {
+/* ---------- Items text -> "to deliver" list (costumer.php "(2x)" format) ---------- */
+function item_rows_html($items_text) {
     $parts = explode(',', (string)$items_text);
     $out   = '';
     $count = 0;
@@ -69,10 +72,12 @@ function item_chips_html($items_text) {
             $qty = max(1, (int)$m[2]);
         }
         $count++;
-        $out .= '<span class="chip">' . htmlspecialchars($one)
-              . ($qty > 1 ? '<span class="qty">×' . $qty . '</span>' : '') . '</span>';
+        $out .= '<div class="item-row">'
+              .   '<span class="item-name">' . htmlspecialchars($one) . '</span>'
+              .   ($qty > 1 ? '<span class="item-qty">×' . $qty . '</span>' : '')
+              . '</div>';
     }
-    return $count ? $out : '<span class="chip muted">No items</span>';
+    return $count ? $out : '<div class="item-none">No items recorded</div>';
 }
 
 /* ---------- render cards (initial server render; JS repaints) ---------- */
@@ -85,16 +90,14 @@ function cards_html(array $rows) {
     }
     $html = '';
     foreach ($rows as $row) {
-        $ident = $row['id'] !== null ? 'Order #' . (int)$row['id'] : 'Served order';
         $html .= '<div class="order-card history-card" data-key="' . htmlspecialchars($row['key']) . '">'
                .   '<div class="oc-head">'
                .     '<div class="oc-ident">'
                .       '<div class="oc-table">Table <b>' . htmlspecialchars($row['table']) . '</b></div>'
-               .       '<div class="oc-id">' . htmlspecialchars($ident) . '</div>'
                .     '</div>'
                .     '<span class="badge badge-serving"><span class="bdot"></span>Served</span>'
                .   '</div>'
-               .   '<div class="chips">' . item_chips_html($row['items']) . '</div>'
+               .   '<div class="items">' . item_rows_html($row['items']) . '</div>'
                . '</div>';
     }
     return $html;
@@ -262,7 +265,6 @@ $con->close();
   .oc-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
   .oc-table{ font-size:15px; font-weight:600; }
   .oc-table b{ font-weight:700; }
-  .oc-id{ font-size:11.5px; color:var(--faint); margin-top:2px; font-variant-numeric:tabular-nums; }
 
   .badge{
     display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:999px;
@@ -271,13 +273,15 @@ $con->close();
   .badge .bdot{ width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.55; }
   .badge-serving{ background:var(--green-soft); color:var(--green); }
 
-  .chips{ display:flex; flex-wrap:wrap; gap:6px; margin-top:11px; }
-  .chip{
-    background:var(--line2); border:1px solid var(--line); color:var(--ink2);
-    border-radius:7px; padding:4px 9px; font-size:12px; font-weight:500;
+  .items{ margin-top:4px; }
+  .item-row{
+    display:flex; align-items:baseline; justify-content:space-between; gap:10px;
+    padding:7px 0; border-bottom:1px dashed var(--line); font-size:13.5px;
   }
-  .chip .qty{ color:var(--brand-dark); font-weight:600; margin-left:4px; }
-  .chip.muted{ color:var(--faint); font-style:italic; font-weight:400; border-style:dashed; }
+  .item-row:last-child{ border-bottom:none; }
+  .item-name{ color:var(--ink2); font-weight:500; }
+  .item-qty{ color:var(--brand-dark); font-weight:700; font-size:12.5px; font-variant-numeric:tabular-nums; }
+  .item-none{ font-size:12px; color:var(--faint); font-style:italic; padding:6px 0; }
 
   /* ---------- Empty state ---------- */
   .empty{ grid-column:1/-1; text-align:center; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:44px 20px; }
@@ -390,8 +394,8 @@ $con->close();
 /* ================= Helpers ================= */
 function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-/* Same "(2x)" parsing as the PHP side */
-function chipsHtml(items){
+/* Same "(2x)" parsing as the PHP side -> "to deliver" list */
+function itemsHtml(items){
   const out = [];
   let count = 0;
   String(items || '').split(',').forEach(part => {
@@ -401,9 +405,12 @@ function chipsHtml(items){
     const m = part.match(/^(.*?)\((\d+)x\)$/u);
     if (m) { name = m[1].trim(); qty = Math.max(1, parseInt(m[2], 10)); }
     count++;
-    out.push('<span class="chip">' + esc(name) + (qty > 1 ? '<span class="qty">×' + qty + '</span>' : '') + '</span>');
+    out.push('<div class="item-row">' +
+               '<span class="item-name">' + esc(name) + '</span>' +
+               (qty > 1 ? '<span class="item-qty">×' + qty + '</span>' : '') +
+             '</div>');
   });
-  return count ? out.join('') : '<span class="chip muted">No items</span>';
+  return count ? out.join('') : '<div class="item-none">No items recorded</div>';
 }
 
 /* ================= Card DOM ================= */
@@ -413,16 +420,14 @@ function buildCard(row){
   const el = document.createElement('div');
   el.className = 'order-card history-card entering';
   el.dataset.key = String(row.key);
-  const ident = row.id ? 'Order #' + row.id : 'Served order';
   el.innerHTML =
     '<div class="oc-head">' +
       '<div class="oc-ident">' +
         '<div class="oc-table">Table <b>' + esc(row.table) + '</b></div>' +
-        '<div class="oc-id">' + esc(ident) + '</div>' +
       '</div>' +
       '<span class="badge badge-serving"><span class="bdot"></span>Served</span>' +
     '</div>' +
-    '<div class="chips">' + chipsHtml(row.items) + '</div>';
+    '<div class="items">' + itemsHtml(row.items) + '</div>';
   el.addEventListener('animationend', () => el.classList.remove('entering'), { once:true });
   return el;
 }

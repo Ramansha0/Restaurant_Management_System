@@ -112,10 +112,9 @@ if (isset($_POST['selected']) && isset($_POST['table'])) {
         $ok = $stmt->execute();
         if ($ok) { $order_id = $stmt->insert_id; }   // real order number from the database
 
-        // Save a copy into history
-        $stmt2 = $con->prepare("INSERT INTO history (`Table`, `Items`) VALUES (?, ?)");
-        $stmt2->bind_param("ss", $table, $selected);
-        $ok = $ok && $stmt2->execute();
+        // NOTE: history is NOT written here anymore. An order is archived
+        // into history only after the waiter confirms it as SERVED
+        // (see api/waiter.php). That keeps history = served orders only.
 
         $order_ok = $ok;
         $message  = $ok ? '' : "❌ Error: " . htmlspecialchars($con->error);

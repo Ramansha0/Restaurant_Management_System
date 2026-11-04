@@ -6,7 +6,9 @@
    - Safe PREPARED statement for the Serve action
    - Stat cards: Live orders / Tables waiting / Items to deliver
    - Smart sorting: oldest waiting order on top
-   - Serve asks for confirmation (it clears the order!)
+   - Serve: asks for confirmation, archives the order into the
+     history table (history = served orders only), then clears
+     the live list
    - AJAX refresh every 5s using a DOM DIFF:
        existing cards update in place (no flashing), only
        genuinely new cards animate, served cards fade out.
@@ -25,8 +27,8 @@ function status_info($status) {
     return array(ucfirst($s), 'badge-new', 'new');
 }
 
-/* ---------- Items text -> chips + qty sum (costumer.php "(2x)" format) ---------- */
-function item_chips_html($items_text) {
+/* ---------- Items text -> "to deliver" list (costumer.php "(2x)" format) ---------- */
+function item_rows_html($items_text) {
     $parts = explode(',', (string)$items_text);
     $out   = '';
     $count = 0;
@@ -39,10 +41,12 @@ function item_chips_html($items_text) {
             $qty = max(1, (int)$m[2]);
         }
         $count++;
-        $out .= '<span class="chip">' . htmlspecialchars($one)
-              . ($qty > 1 ? '<span class="qty">×' . $qty . '</span>' : '') . '</span>';
+        $out .= '<div class="item-row">'
+              .   '<span class="item-name">' . htmlspecialchars($one) . '</span>'
+              .   ($qty > 1 ? '<span class="item-qty">×' . $qty . '</span>' : '')
+              . '</div>';
     }
-    return $count ? $out : '<span class="chip muted">No items</span>';
+    return $count ? $out : '<div class="item-none">No items recorded</div>';
 }
 
 /* ---------- render cards (initial server render; JS repaints in place) ---------- */
@@ -60,11 +64,10 @@ function cards_html(array $rows) {
                .   '<div class="oc-head">'
                .     '<div class="oc-ident">'
                .       '<div class="oc-table">Table <b>' . htmlspecialchars($row['table']) . '</b></div>'
-               .       '<div class="oc-id">Order #' . (int)$row['id'] . '</div>'
                .     '</div>'
                .     '<span class="badge ' . $badge[1] . '"><span class="bdot"></span>' . htmlspecialchars($badge[0]) . '</span>'
                .   '</div>'
-               .   '<div class="chips">' . item_chips_html($row['items']) . '</div>'
+               .   '<div class="items">' . item_rows_html($row['items']) . '</div>'
                .   '<form method="POST" class="card-actions">'
                .     '<input type="hidden" name="ID" value="' . (int)$row['id'] . '">'
                .     '<button type="submit" name="serve" class="btn">Serve</button>'
@@ -117,15 +120,33 @@ function load_orders($con) {
    ============================================================ */
 $con = db_orders();
 
-/* --- Serve (safe prepared statement) --- */
+/* --- Serve: archive a copy into history (served-only archive),
+       then clear the order from the live list --- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id = isset($_POST['ID']) ? (int)$_POST['ID'] : 0;
 
     if ($id > 0 && isset($_POST['serve'])) {
-        $stmt = $con->prepare("DELETE FROM orders WHERE ID = ?");
+        // 1) read the order
+        $stmt = $con->prepare("SELECT `Table`, `Items` FROM orders WHERE ID = ?");
         $stmt->bind_param('i', $id);
         $stmt->execute();
+        $stmt->bind_result($t_val, $i_val);
+        $found = $stmt->fetch();
         $stmt->close();
+
+        if ($found) {
+            // 2) archive into history (only SERVED orders land here)
+            $ins = $con->prepare("INSERT INTO history (`Table`, `Items`) VALUES (?, ?)");
+            $ins->bind_param('ss', $t_val, $i_val);
+            $ins->execute();
+            $ins->close();
+
+            // 3) remove from the live list
+            $del = $con->prepare("DELETE FROM orders WHERE ID = ?");
+            $del->bind_param('i', $id);
+            $del->execute();
+            $del->close();
+        }
     }
 
     // Post/Redirect/Get: no "resend form?" popup on refresh
@@ -290,7 +311,6 @@ $con->close();
   .oc-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
   .oc-table{ font-size:15px; font-weight:600; }
   .oc-table b{ font-weight:700; }
-  .oc-id{ font-size:11.5px; color:var(--faint); margin-top:2px; font-variant-numeric:tabular-nums; }
 
   .badge{
     display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:999px;
@@ -301,13 +321,15 @@ $con->close();
   .badge-pending{ background:var(--amber-soft); color:var(--amber); }
   .badge-serving{ background:var(--green-soft); color:var(--green); }
 
-  .chips{ display:flex; flex-wrap:wrap; gap:6px; margin-top:11px; }
-  .chip{
-    background:var(--line2); border:1px solid var(--line); color:var(--ink2);
-    border-radius:7px; padding:4px 9px; font-size:12px; font-weight:500;
+  .items{ margin-top:4px; }
+  .item-row{
+    display:flex; align-items:baseline; justify-content:space-between; gap:10px;
+    padding:7px 0; border-bottom:1px dashed var(--line); font-size:13.5px;
   }
-  .chip .qty{ color:var(--brand-dark); font-weight:600; margin-left:4px; }
-  .chip.muted{ color:var(--faint); font-style:italic; font-weight:400; border-style:dashed; }
+  .item-row:last-child{ border-bottom:none; }
+  .item-name{ color:var(--ink2); font-weight:500; }
+  .item-qty{ color:var(--brand-dark); font-weight:700; font-size:12.5px; font-variant-numeric:tabular-nums; }
+  .item-none{ font-size:12px; color:var(--faint); font-style:italic; padding:6px 0; }
 
   .card-actions{ display:flex; gap:8px; margin-top:auto; padding-top:13px; }
   .btn{
@@ -453,8 +475,8 @@ function statusOf(s){
   return { label: s.charAt(0).toUpperCase() + s.slice(1), badge:'badge-new', state:'new' };
 }
 
-/* Same "(2x)" parsing as the PHP side */
-function chipsHtml(items){
+/* Same "(2x)" parsing as the PHP side -> "to deliver" list */
+function itemsHtml(items){
   const out = [];
   let count = 0;
   String(items || '').split(',').forEach(part => {
@@ -464,9 +486,12 @@ function chipsHtml(items){
     const m = part.match(/^(.*?)\((\d+)x\)$/u);
     if (m) { name = m[1].trim(); qty = Math.max(1, parseInt(m[2], 10)); }
     count++;
-    out.push('<span class="chip">' + esc(name) + (qty > 1 ? '<span class="qty">×' + qty + '</span>' : '') + '</span>');
+    out.push('<div class="item-row">' +
+               '<span class="item-name">' + esc(name) + '</span>' +
+               (qty > 1 ? '<span class="item-qty">×' + qty + '</span>' : '') +
+             '</div>');
   });
-  return count ? out.join('') : '<span class="chip muted">No items</span>';
+  return count ? out.join('') : '<div class="item-none">No items recorded</div>';
 }
 
 /* ================= Card DOM ================= */
@@ -481,11 +506,10 @@ function buildCard(row){
     '<div class="oc-head">' +
       '<div class="oc-ident">' +
         '<div class="oc-table">Table <b>' + esc(row.table) + '</b></div>' +
-        '<div class="oc-id">Order #' + row.id + '</div>' +
       '</div>' +
       '<span class="badge ' + st.badge + '"><span class="bdot"></span>' + esc(st.label) + '</span>' +
     '</div>' +
-    '<div class="chips">' + chipsHtml(row.items) + '</div>' +
+    '<div class="items">' + itemsHtml(row.items) + '</div>' +
     '<form method="POST" class="card-actions">' +
       '<input type="hidden" name="ID" value="' + row.id + '">' +
       '<button type="submit" name="serve" class="btn">Serve</button>' +
@@ -501,13 +525,12 @@ function paintCard(el, row){
   el.classList.remove('state-new', 'state-pending', 'state-serving');
   el.classList.add('state-' + st.state);
   el.querySelector('.oc-table b').textContent = row.table;
-  el.querySelector('.oc-id').textContent = 'Order #' + row.id;
   const badge = el.querySelector('.badge');
   badge.className = 'badge ' + st.badge;
   badge.textContent = '';
   const dot = document.createElement('span'); dot.className = 'bdot';
   badge.append(dot, document.createTextNode(st.label));
-  el.querySelector('.chips').innerHTML = chipsHtml(row.items);
+  el.querySelector('.items').innerHTML = itemsHtml(row.items);
   const f = el.querySelector('input[name=ID]'); if (f) f.value = row.id;
 }
 
